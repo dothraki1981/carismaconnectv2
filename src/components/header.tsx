@@ -16,7 +16,28 @@ const getBreadcrumb = (pathname: string) => {
     const pathParts = pathname.split('/').filter(part => part);
     const breadcrumbs = pathParts.map((part, index) => {
         const href = '/' + pathParts.slice(0, index + 1).join('/');
-        const label = part.charAt(0).toUpperCase() + part.slice(1).replace('-', ' ');
+        let label = part.charAt(0).toUpperCase() + part.slice(1).replace('-', ' ');
+        switch(label) {
+            case "Students":
+                label = "Alunos";
+                break;
+            case "Teachers":
+                label = "Professores";
+                break;
+            case "Classes":
+                label = "Turmas";
+                break;
+            case "Subjects":
+                label = "Disciplinas";
+                break;
+            case "Grades":
+                label = "Notas e Faltas";
+                break;
+            case "Schedule assistant":
+                label = "Auxiliar IA";
+                break;
+        }
+
         const isLast = index === pathParts.length - 1;
 
         return (

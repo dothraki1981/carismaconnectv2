@@ -58,7 +58,7 @@ export default function RootLayout({
               <Button variant="ghost" className="w-full justify-start text-left">
                 <div className="flex w-full items-center gap-2">
                   <Avatar className="size-8">
-                    <AvatarImage src="https://picsum.photos/100" alt="User" data-ai-hint="person avatar" />
+                    <AvatarImage src="https://picsum.photos/100" alt="Usuário" data-ai-hint="person avatar" />
                     <AvatarFallback>U</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col">
@@ -66,7 +66,7 @@ export default function RootLayout({
                       Usuário
                     </span>
                     <span className="text-xs text-sidebar-foreground/70">
-                      Logout
+                      Sair
                     </span>
                   </div>
                 </div>
