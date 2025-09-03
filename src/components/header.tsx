@@ -1,0 +1,59 @@
+"use client";
+
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { usePathname } from "next/navigation";
+import React from "react";
+
+const getBreadcrumb = (pathname: string) => {
+    const pathParts = pathname.split('/').filter(part => part);
+    const breadcrumbs = pathParts.map((part, index) => {
+        const href = '/' + pathParts.slice(0, index + 1).join('/');
+        const label = part.charAt(0).toUpperCase() + part.slice(1).replace('-', ' ');
+        const isLast = index === pathParts.length - 1;
+
+        return (
+            <React.Fragment key={href}>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                    {isLast ? (
+                        <BreadcrumbPage>{label}</BreadcrumbPage>
+                    ) : (
+                        <BreadcrumbLink href={href}>{label}</BreadcrumbLink>
+                    )}
+                </BreadcrumbItem>
+            </React.Fragment>
+        );
+    });
+
+    return breadcrumbs;
+}
+
+
+export function Header() {
+  const pathname = usePathname();
+
+  return (
+    <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
+      <SidebarTrigger className="md:hidden" />
+      <Breadcrumb className="hidden md:flex">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/">Dashboard</BreadcrumbLink>
+          </BreadcrumbItem>
+          {getBreadcrumb(pathname)}
+        </BreadcrumbList>
+      </Breadcrumb>
+      <div className="ml-auto">
+        {/* Future actions can go here */}
+      </div>
+    </header>
+  );
+}
