@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -52,7 +53,11 @@ export function ClassForm({ onSubmit, setOpen, classData }: ClassFormProps) {
   });
 
   function handleFormSubmit(values: z.infer<typeof formSchema>) {
-    onSubmit(values as Class);
+    const dataToSubmit = {
+      ...values,
+      teacherId: values.teacherId === "none" ? undefined : values.teacherId,
+    };
+    onSubmit(dataToSubmit as Class);
     setOpen(false);
   }
 
@@ -78,14 +83,14 @@ export function ClassForm({ onSubmit, setOpen, classData }: ClassFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Professor</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o professor responsável" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">Nenhum</SelectItem>
+                  <SelectItem value="none">Nenhum</SelectItem>
                   {mockTeachers.map((teacher) => (
                     <SelectItem key={teacher.id} value={teacher.id}>
                       {teacher.name}
