@@ -14,7 +14,7 @@ import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 import { MainNav } from "@/components/main-nav";
 import { Header } from "@/components/header";
-import { AppLogo } from "@/app/icon";
+import { AppLogo } from "@/app/app-logo";
 import "./globals.css";
 
 export const metadata: Metadata = {
