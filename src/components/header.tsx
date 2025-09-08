@@ -33,6 +33,9 @@ const getBreadcrumb = (pathname: string) => {
             case "Grades":
                 label = "Notas e Faltas";
                 break;
+            case "Reports":
+                label = "Relatórios";
+                break;
             case "Schedule assistant":
                 label = "Auxiliar IA";
                 break;
@@ -62,7 +65,7 @@ export function Header() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
+    <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6 no-print">
       <SidebarTrigger className="md:hidden" />
       <Breadcrumb className="hidden md:flex">
         <BreadcrumbList>

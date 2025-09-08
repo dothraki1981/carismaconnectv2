@@ -13,6 +13,7 @@ import {
   BookOpen,
   ClipboardEdit,
   Sparkles,
+  FileText,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -24,6 +25,7 @@ const navItems = [
   { href: "/classes", label: "Turmas", icon: <School /> },
   { href: "/subjects", label: "Disciplinas", icon: <BookOpen /> },
   { href: "/grades", label: "Notas e Faltas", icon: <ClipboardEdit /> },
+  { href: "/reports", label: "Relatórios", icon: <FileText /> },
   { href: "/schedule-assistant", label: "Auxiliar IA", icon: <Sparkles /> },
 ];
 
