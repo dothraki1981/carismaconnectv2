@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -53,7 +54,8 @@ export default function SubjectsPage() {
           description: "Disciplina atualizada com sucesso.",
         });
       } else { // Adding
-        await addDoc(collection(db, "subjects"), subjectData);
+        const { id, ...dataToSave } = subjectData;
+        await addDoc(collection(db, "subjects"), dataToSave);
         toast({
           title: "Sucesso!",
           description: "Disciplina cadastrada com sucesso.",

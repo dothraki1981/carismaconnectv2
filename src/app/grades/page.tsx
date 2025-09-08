@@ -62,7 +62,8 @@ export default function GradesPage() {
         const { id, ...dataToUpdate } = gradeData;
         await updateDoc(gradeDocRef, dataToUpdate);
       } else { // Adding new grade
-        await addDoc(collection(db, "grades"), gradeData);
+        const { id, ...dataToSave } = gradeData;
+        await addDoc(collection(db, "grades"), dataToSave);
       }
     } catch (error) {
       console.error("Error saving grade: ", error);

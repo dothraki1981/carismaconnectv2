@@ -105,7 +105,8 @@ export default function StudentsPage() {
           description: "Aluno atualizado com sucesso.",
         });
       } else { // Adding
-        await addDoc(collection(db, "students"), studentData);
+        const { id, ...dataToSave } = studentData;
+        await addDoc(collection(db, "students"), dataToSave);
         toast({
           title: "Sucesso!",
           description: "Aluno cadastrado com sucesso.",

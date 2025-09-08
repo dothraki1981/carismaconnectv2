@@ -77,7 +77,8 @@ export default function TeachersPage() {
           description: "Professor atualizado com sucesso.",
         });
       } else { // Adding
-        await addDoc(collection(db, "teachers"), teacherData);
+        const { id, ...dataToSave } = teacherData;
+        await addDoc(collection(db, "teachers"), dataToSave);
         toast({
           title: "Sucesso!",
           description: "Professor cadastrado com sucesso.",
