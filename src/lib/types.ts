@@ -1,3 +1,4 @@
+
 export interface Student {
   id: string;
   name: string;
@@ -32,4 +33,11 @@ export interface Grade {
   recoveryGrade?: number;
   examGrade?: number;
   absences: number;
+}
+
+export interface AppUser {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  role: 'admin' | 'editor'; // Example roles
 }

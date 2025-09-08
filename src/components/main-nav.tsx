@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -14,6 +15,7 @@ import {
   ClipboardEdit,
   Sparkles,
   FileText,
+  Users2
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -27,6 +29,7 @@ const navItems = [
   { href: "/grades", label: "Notas e Faltas", icon: <ClipboardEdit /> },
   { href: "/reports", label: "Relatórios", icon: <FileText /> },
   { href: "/schedule-assistant", label: "Auxiliar IA", icon: <Sparkles /> },
+  { href: "/users", label: "Usuários", icon: <Users2 /> },
 ];
 
 export function MainNav() {
@@ -38,7 +41,7 @@ export function MainNav() {
         <SidebarMenuItem key={item.href}>
           <SidebarMenuButton
             asChild
-            isActive={pathname === item.href}
+            isActive={pathname.startsWith(item.href) && (item.href !== '/' || pathname === '/')}
             tooltip={item.label}
           >
             <Link href={item.href}>
