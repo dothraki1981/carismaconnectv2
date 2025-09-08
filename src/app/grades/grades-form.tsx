@@ -1,14 +1,13 @@
 
 "use client";
 
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -25,6 +24,7 @@ import {
 import { mockStudents } from "@/lib/mock-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import type { Student } from "@/lib/types";
 
 const formSchema = z.object({
   studentId: z.string({ required_error: "Selecione um aluno." }),
@@ -36,7 +36,11 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-export function GradesForm() {
+type GradesFormProps = {
+  selectedClassId: string | null;
+}
+
+export function GradesForm({ selectedClassId }: GradesFormProps) {
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -48,7 +52,7 @@ export function GradesForm() {
     },
   });
 
-  const { watch } = form;
+  const { watch, control, reset } = form;
   const grade = watch("grade");
   const recoveryGrade = watch("recoveryGrade");
   const examGrade = watch("examGrade");
@@ -56,10 +60,14 @@ export function GradesForm() {
 
   const showRecovery = grade !== undefined && grade < 7;
   const showExam = showRecovery && recoveryGrade !== undefined && recoveryGrade < 7;
+  
+  // TODO: Filter students by selectedClassId when the relationship is available
+  const studentsInClass: Student[] = mockStudents;
 
   function onSubmit(values: FormData) {
-    console.log("Submitting grades:", values);
+    console.log("Submitting grades for class", selectedClassId, ":", values);
     alert("Notas salvas com sucesso! (Verifique o console)");
+    reset();
   }
 
   const getAbsenceStatus = () => {
@@ -93,7 +101,7 @@ export function GradesForm() {
     if (showRecovery && recoveryGrade !== undefined && recoveryGrade < 7 && !showExam) {
          return <Badge variant="destructive" className="text-sm">Em Exame</Badge>
     }
-    if (grade !== undefined && grade < 7 && !showRecovery) {
+    if (grade !== undefined && grade < 7 && !recoveryGrade) {
         return <Badge variant="destructive" className="text-sm">Em Recuperação</Badge>
     }
     
@@ -104,19 +112,19 @@ export function GradesForm() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
-          control={form.control}
+          control={control}
           name="studentId"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Aluno</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um aluno" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {mockStudents.map((student) => (
+                  {studentsInClass.map((student) => (
                     <SelectItem key={student.id} value={student.id}>
                       {student.name}
                     </SelectItem>
@@ -130,13 +138,13 @@ export function GradesForm() {
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <FormField
-            control={form.control}
+            control={control}
             name="grade"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Nota</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.1" placeholder="0.0 - 10.0" {...field} value={field.value ?? ''} />
+                  <Input type="number" step="0.1" placeholder="0.0 - 10.0" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} value={field.value ?? ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -144,7 +152,7 @@ export function GradesForm() {
           />
 
           <FormField
-            control={form.control}
+            control={control}
             name="absences"
             render={({ field }) => (
               <FormItem>
@@ -160,13 +168,13 @@ export function GradesForm() {
 
         {showRecovery && (
           <FormField
-            control={form.control}
+            control={control}
             name="recoveryGrade"
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-primary">Nota da Recuperação</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.1" placeholder="0.0 - 10.0" {...field} value={field.value ?? ''} />
+                  <Input type="number" step="0.1" placeholder="0.0 - 10.0" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} value={field.value ?? ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -176,13 +184,13 @@ export function GradesForm() {
 
         {showExam && (
           <FormField
-            control={form.control}
+            control={control}
             name="examGrade"
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-destructive">Nota do Exame</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.1" placeholder="0.0 - 10.0" {...field} value={field.value ?? ''} />
+                  <Input type="number" step="0.1" placeholder="0.0 - 10.0" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} value={field.value ?? ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -207,7 +215,7 @@ export function GradesForm() {
         </Card>
 
         <div className="flex justify-end pt-4">
-          <Button type="submit">Salvar Notas e Faltas</Button>
+          <Button type="submit" disabled={!selectedClassId}>Salvar Notas e Faltas</Button>
         </div>
       </form>
     </Form>
