@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -22,38 +22,17 @@ import type { Grade, Student, Subject } from "@/lib/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { db } from "@/lib/firebase";
-import { collection, onSnapshot, query, addDoc, updateDoc, doc } from "firebase/firestore";
+import { collection, addDoc, updateDoc, doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { useFirestoreQuery } from "@/hooks/use-firestore-query";
 
 export default function GradesPage() {
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
-  const [grades, setGrades] = useState<Grade[]>([]);
-  const [students, setStudents] = useState<Student[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
+  
+  const grades = useFirestoreQuery<Grade>("grades");
+  const students = useFirestoreQuery<Student>("students");
+  const subjects = useFirestoreQuery<Subject>("subjects");
   const { toast } = useToast();
-
-  useEffect(() => {
-    const qStudents = query(collection(db, "students"));
-    const unsubscribeStudents = onSnapshot(qStudents, (snapshot) => {
-      setStudents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student)));
-    });
-
-    const qSubjects = query(collection(db, "subjects"));
-    const unsubscribeSubjects = onSnapshot(qSubjects, (snapshot) => {
-      setSubjects(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Subject)));
-    });
-
-    const qGrades = query(collection(db, "grades"));
-    const unsubscribeGrades = onSnapshot(qGrades, (snapshot) => {
-      setGrades(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Grade)));
-    });
-
-    return () => {
-      unsubscribeStudents();
-      unsubscribeSubjects();
-      unsubscribeGrades();
-    };
-  }, []);
 
   const handleSaveGrade = async (gradeData: Omit<Grade, 'id'> & { id?: string }) => {
     try {

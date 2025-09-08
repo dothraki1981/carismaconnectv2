@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -21,37 +21,16 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { db } from "@/lib/firebase";
-import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, query } from "firebase/firestore";
+import { collection, addDoc, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { useFirestoreQuery } from "@/hooks/use-firestore-query";
 
 export default function ClassesPage() {
-  const [classes, setClasses] = useState<Class[]>([]);
+  const classes = useFirestoreQuery<Class>("classes");
   const [open, setOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<Class | undefined>(undefined);
   const [deletingClass, setDeletingClass] = useState<Class | null>(null);
   const { toast } = useToast();
-
-  useEffect(() => {
-    const qClasses = query(collection(db, "classes"));
-    const unsubscribeClasses = onSnapshot(qClasses, (querySnapshot) => {
-      const classesData: Class[] = [];
-      querySnapshot.forEach((doc) => {
-        classesData.push({ ...doc.data(), id: doc.id } as Class);
-      });
-      setClasses(classesData);
-    }, (error) => {
-      console.error("Error fetching classes: ", error);
-      toast({
-        title: "Erro de Conexão",
-        description: "Não foi possível buscar os dados das turmas. Verifique sua conexão e as configurações do Firebase.",
-        variant: "destructive",
-      });
-    });
-
-    return () => {
-      unsubscribeClasses();
-    };
-  }, [toast]);
 
   const handleSaveClass = async (classData: Omit<Class, 'id'> & { id?: string }) => {
     try {

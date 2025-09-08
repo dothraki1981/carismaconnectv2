@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -23,40 +23,17 @@ import {
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, query } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { useFirestoreQuery } from "@/hooks/use-firestore-query";
 import { Badge } from "@/components/ui/badge";
 
 export default function TeachersPage() {
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const teachers = useFirestoreQuery<Teacher>("teachers");
+  const subjects = useFirestoreQuery<Subject>("subjects");
+
   const [open, setOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<Teacher | undefined>(undefined);
   const [deletingTeacher, setDeletingTeacher] = useState<Teacher | null>(null);
   const { toast } = useToast();
-
-  useEffect(() => {
-    const qTeachers = query(collection(db, "teachers"));
-    const unsubscribeTeachers = onSnapshot(qTeachers, (querySnapshot) => {
-      const teachersData: Teacher[] = [];
-      querySnapshot.forEach((doc) => {
-        teachersData.push({ ...doc.data(), id: doc.id } as Teacher);
-      });
-      setTeachers(teachersData);
-    });
-
-    const qSubjects = query(collection(db, "subjects"));
-    const unsubscribeSubjects = onSnapshot(qSubjects, (querySnapshot) => {
-      const subjectsData: Subject[] = [];
-      querySnapshot.forEach((doc) => {
-        subjectsData.push({ ...doc.data(), id: doc.id } as Subject);
-      });
-      setSubjects(subjectsData);
-    });
-
-    return () => {
-      unsubscribeTeachers();
-      unsubscribeSubjects();
-    }
-  }, []);
 
   const getSubjectNames = (subjectIds: string[]) => {
     if (!subjectIds || subjectIds.length === 0) return <Badge variant="outline">N/A</Badge>;

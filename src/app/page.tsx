@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useFirestoreQuery } from "@/hooks/use-firestore-query";
 import {
   Card,
   CardContent,
@@ -15,48 +15,36 @@ import {
   School,
   BookOpen,
 } from "lucide-react";
-import { db } from "@/lib/firebase";
-import { collection, onSnapshot, query } from "firebase/firestore";
+import type { Student, Teacher, Class, Subject } from "@/lib/types";
 
 export default function DashboardPage() {
-  const [studentCount, setStudentCount] = useState(0);
-  const [teacherCount, setTeacherCount] = useState(0);
-  const [classCount, setClassCount] = useState(0);
-  const [subjectCount, setSubjectCount] = useState(0);
-
-  useEffect(() => {
-    const unsubscribes = [
-      onSnapshot(query(collection(db, "students")), (snapshot) => setStudentCount(snapshot.size)),
-      onSnapshot(query(collection(db, "teachers")), (snapshot) => setTeacherCount(snapshot.size)),
-      onSnapshot(query(collection(db, "classes")), (snapshot) => setClassCount(snapshot.size)),
-      onSnapshot(query(collection(db, "subjects")), (snapshot) => setSubjectCount(snapshot.size)),
-    ];
-
-    return () => unsubscribes.forEach(unsub => unsub());
-  }, []);
+  const students = useFirestoreQuery<Student>("students");
+  const teachers = useFirestoreQuery<Teacher>("teachers");
+  const classes = useFirestoreQuery<Class>("classes");
+  const subjects = useFirestoreQuery<Subject>("subjects");
 
   const stats = [
     {
       title: "Total de Alunos",
-      value: studentCount,
+      value: students.length,
       icon: <Users className="h-6 w-6 text-primary" />,
       description: "Alunos cadastrados no sistema.",
     },
     {
       title: "Total de Professores",
-      value: teacherCount,
+      value: teachers.length,
       icon: <UserSquare className="h-6 w-6 text-primary" />,
       description: "Professores cadastrados no sistema.",
     },
     {
       title: "Total de Turmas",
-      value: classCount,
+      value: classes.length,
       icon: <School className="h-6 w-6 text-primary" />,
       description: "Turmas abertas no sistema.",
     },
     {
       title: "Total de Disciplinas",
-      value: subjectCount,
+      value: subjects.length,
       icon: <BookOpen className="h-6 w-6 text-primary" />,
       description: "Disciplinas disponíveis.",
     },

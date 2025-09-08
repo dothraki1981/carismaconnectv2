@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -21,27 +21,16 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { db } from "@/lib/firebase";
-import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, query } from "firebase/firestore";
+import { collection, addDoc, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { useFirestoreQuery } from "@/hooks/use-firestore-query";
 
 export default function SubjectsPage() {
-  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const subjects = useFirestoreQuery<Subject>("subjects");
   const [open, setOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | undefined>(undefined);
   const [deletingSubject, setDeletingSubject] = useState<Subject | null>(null);
   const { toast } = useToast();
-
-  useEffect(() => {
-    const q = query(collection(db, "subjects"));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const subjectsData: Subject[] = [];
-      querySnapshot.forEach((doc) => {
-        subjectsData.push({ ...doc.data(), id: doc.id } as Subject);
-      });
-      setSubjects(subjectsData);
-    });
-    return () => unsubscribe();
-  }, []);
 
   const handleSaveSubject = async (subjectData: Omit<Subject, 'id'> & { id?: string }) => {
     try {

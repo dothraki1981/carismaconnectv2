@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Card,
   CardContent,
@@ -48,47 +48,25 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { db } from "@/lib/firebase";
-import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, query } from "firebase/firestore";
+import { addDoc, collection, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { useFirestoreQuery } from "@/hooks/use-firestore-query";
 
 export default function StudentsPage() {
-  const [students, setStudents] = useState<Student[]>([]);
-  const [classes, setClasses] = useState<Class[]>([]);
+  const students = useFirestoreQuery<Student>("students");
+  const classes = useFirestoreQuery<Class>("classes");
+  
   const [open, setOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | undefined>(undefined);
   const [deletingStudent, setDeletingStudent] = useState<Student | null>(null);
   const { toast } = useToast();
-
-  useEffect(() => {
-    const qStudents = query(collection(db, "students"));
-    const unsubscribeStudents = onSnapshot(qStudents, (querySnapshot) => {
-      const studentsData: Student[] = [];
-      querySnapshot.forEach((doc) => {
-        studentsData.push({ ...doc.data(), id: doc.id } as Student);
-      });
-      setStudents(studentsData);
-    });
-    
-    const qClasses = query(collection(db, "classes"));
-    const unsubscribeClasses = onSnapshot(qClasses, (querySnapshot) => {
-        const classesData: Class[] = [];
-        querySnapshot.forEach((doc) => {
-            classesData.push({ ...doc.data(), id: doc.id } as Class);
-        });
-        setClasses(classesData);
-    });
-
-    return () => {
-      unsubscribeStudents();
-      unsubscribeClasses();
-    };
-  }, []);
 
   const getClassName = (classId: string) => {
     return classes.find(c => c.id === classId)?.name || "Sem turma";
   }
 
   const formatCpf = (cpf: string) => {
+    if (!cpf) return '';
     const cleaned = cpf.replace(/\D/g, '');
     if (cleaned.length !== 11) return cpf;
     return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');

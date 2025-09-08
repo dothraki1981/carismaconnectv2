@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -29,39 +29,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Printer, FileText } from "lucide-react";
 import type { Grade, Student, Subject } from "@/lib/types";
-import { db } from "@/lib/firebase";
-import { collection, onSnapshot, query } from "firebase/firestore";
+import { useFirestoreQuery } from "@/hooks/use-firestore-query";
 
 export default function ReportsPage() {
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
   
-  const [students, setStudents] = useState<Student[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [grades, setGrades] = useState<Grade[]>([]);
-
-  useEffect(() => {
-    const qStudents = query(collection(db, "students"));
-    const unsubscribeStudents = onSnapshot(qStudents, (snapshot) => {
-      setStudents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student)));
-    });
-
-    const qSubjects = query(collection(db, "subjects"));
-    const unsubscribeSubjects = onSnapshot(qSubjects, (snapshot) => {
-      setSubjects(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Subject)));
-    });
-    
-    const qGrades = query(collection(db, "grades"));
-    const unsubscribeGrades = onSnapshot(qGrades, (snapshot) => {
-      setGrades(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Grade)));
-    });
-
-    return () => {
-      unsubscribeStudents();
-      unsubscribeSubjects();
-      unsubscribeGrades();
-    };
-  }, []);
-
+  const students = useFirestoreQuery<Student>("students");
+  const subjects = useFirestoreQuery<Subject>("subjects");
+  const grades = useFirestoreQuery<Grade>("grades");
 
   const selectedSubject = useMemo(() => {
     return subjects.find((s) => s.id === selectedSubjectId) || null;
