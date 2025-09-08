@@ -27,7 +27,7 @@ const formSchema = z.object({
 });
 
 type StudentFormProps = {
-  onSubmit: (student: Omit<Student, 'id'> & { id?: string }) => void;
+  onSubmit: (student: Omit<Student, 'id'> & { id?: string }) => Promise<void>;
   setOpen: (open: boolean) => void;
   student?: Student;
   existingStudents: Student[];
@@ -44,7 +44,9 @@ export function StudentForm({ onSubmit, setOpen, student, existingStudents }: St
     },
   });
 
-  function handleFormSubmit(values: z.infer<typeof formSchema>) {
+  const { formState: { isSubmitting } } = form;
+
+  async function handleFormSubmit(values: z.infer<typeof formSchema>) {
     const cleanedCpf = values.cpf.replace(/\D/g, "");
 
     const isDuplicate = existingStudents.some(s => {
@@ -62,8 +64,7 @@ export function StudentForm({ onSubmit, setOpen, student, existingStudents }: St
       return;
     }
     
-    onSubmit({ ...values, cpf: cleanedCpf });
-    setOpen(false);
+    await onSubmit({ ...values, cpf: cleanedCpf });
   }
 
   return (
@@ -109,10 +110,12 @@ export function StudentForm({ onSubmit, setOpen, student, existingStudents }: St
           )}
         />
         <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+          <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isSubmitting}>
             Cancelar
           </Button>
-          <Button type="submit">Salvar</Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Salvando...' : 'Salvar'}
+          </Button>
         </div>
       </form>
     </Form>
