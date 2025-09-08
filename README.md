@@ -2,8 +2,6 @@
 
 This is a NextJS starter in Firebase Studio.
 
-To get started, take a look at src/app/page.tsx.
-
 ---
 
 ## How to Push to a **New** GitHub Repository
@@ -54,5 +52,30 @@ git commit -m "Describe your changes here"
 
 **3. Push to GitHub**
 ```bash
+git push
+```
+
+---
+## Common Troubleshooting
+
+### Error: `remote origin already exists`
+**What it means:** You tried to connect (`add`) your project, but it's already connected to another repository.
+
+**How to fix:** Instead of adding, **update** the URL of the existing `origin` with the `set-url` command.
+```bash
+# Replace with the URL of your NEW repository
+git remote set-url origin https://github.com/your-user/your-new-repository.git
+```
+After that, try the `git push` again.
+
+### Error: `[rejected] (fetch first)` or `(non-fast-forward)`
+**What it means:** The repository on GitHub has changes (like an initial README) that your computer doesn't have. You need to download those changes before you can push yours.
+
+**How to fix:** Use `git pull --rebase` to download the remote changes and place yours on top.
+```bash
+# 1. Pull the changes from GitHub
+git pull origin main --rebase
+
+# 2. Now push your changes
 git push
 ```
