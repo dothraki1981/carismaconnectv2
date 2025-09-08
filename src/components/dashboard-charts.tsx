@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts";
@@ -7,6 +8,8 @@ import {
   ChartContainer,
 } from "@/components/ui/chart";
 
+// This component is not currently in use. The data is hardcoded.
+// It can be repurposed later to show real data from Firestore.
 const chartData = [
   { class: "Engenharia A", students: 180 },
   { class: "Comp. B", students: 200 },
