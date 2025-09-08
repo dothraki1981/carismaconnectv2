@@ -4,6 +4,8 @@ Este é um projeto Next.js gerado pelo Firebase Studio.
 
 **Nota Importante sobre o Fluxo de Trabalho:** As alterações de código que o assistente de IA faz são aplicadas **localmente** no seu ambiente do Firebase Studio. Para que essas alterações sejam salvas no seu repositório e publicadas na sua URL do Firebase, você precisa **manualmente** executar os comandos `git add`, `git commit` e `git push` no seu terminal.
 
+---
+
 ## Como Rodar o Projeto Localmente
 
 Para ver e interagir com sua aplicação, você precisa iniciar o servidor de desenvolvimento.
@@ -80,9 +82,28 @@ Após alguns minutos, o Firebase irá construir seu projeto e te dará uma URL p
 
 ---
 
-## Solução de Problemas Comuns e Comandos Iniciais
+## Solução de Problemas Comuns
 
-Esta seção é principalmente para a **primeira vez** que você conecta o projeto a um repositório novo.
+### Erro de Conexão com o Firestore (Erro de 'Listen' no Console)
+Se você ver um erro no console do navegador como `WebChannelConnection ... transport errored`, geralmente significa que o banco de dados Firestore não está configurado corretamente.
+
+**Solução:**
+1.  **Vá para o Firebase Console** > **Build** > **Firestore Database**.
+2.  **Crie o Banco de Dados:** Se você ainda não tiver um, clique em "Criar banco de dados", selecione o **modo de produção** e escolha uma localização.
+3.  **Verifique as Regras de Segurança:** Vá para a aba **Regras**. Para desenvolvimento, você pode usar a seguinte regra que permite o acesso apenas para usuários autenticados:
+    ```
+    rules_version = '2';
+    service cloud.firestore {
+      match /databases/{database}/documents {
+        match /{document=**} {
+          allow read, write: if request.auth != null;
+        }
+      }
+    }
+    ```
+4.  Clique em **Publicar**.
+
+### Erro ao Enviar para o GitHub (`git push`)
 
 #### Erro: `remote origin already exists`
 Se você receber este erro, significa que já existe uma conexão. Use o comando abaixo para atualizá-la para o novo repositório:
@@ -98,8 +119,8 @@ git push
 ```
 
 #### Erro: `The current branch main has no upstream branch`
-Este erro ocorre na primeira vez que você envia o código. O Git precisa que você confirme para onde a sua branch `main` deve apontar.
+Este erro ocorre na primeira vez que você envia o código para um repositório novo. O Git precisa que você confirme para onde a sua branch `main` deve apontar. **Execute este comando apenas uma vez:**
 ```bash
 git push --set-upstream origin main
 ```
-Depois de executar este comando uma vez, você poderá usar apenas `git push` nas próximas vezes.
+Depois disso, você poderá usar apenas `git push` nas próximas vezes.

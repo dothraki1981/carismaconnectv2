@@ -12,6 +12,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyDGbLTosgj5HP2FVxao4s8zy3F1-LY9slo",
   authDomain: "carisma-connect-jupz2.firebaseapp.com",
   messagingSenderId: "111655261768",
+  databaseURL: "https://carisma-connect-jupz2.firebaseio.com"
 };
 
 
