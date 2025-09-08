@@ -1,8 +1,8 @@
 
 // Import the functions you need from the SDKs you need
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
+import { getFirestore, Firestore } from "firebase/firestore";
+import { getAuth, Auth } from "firebase/auth";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -16,9 +16,18 @@ const firebaseConfig = {
 };
 
 
-// Initialize Firebase
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+// Initialize Firebase for SSR
+let app: FirebaseApp;
+let auth: Auth;
+let db: Firestore;
 
-// Initialize Cloud Firestore and get a reference to the service
-export const db = getFirestore(app);
-export const auth = getAuth(app);
+if (getApps().length === 0) {
+    app = initializeApp(firebaseConfig);
+} else {
+    app = getApp();
+}
+
+auth = getAuth(app);
+db = getFirestore(app);
+
+export { app, auth, db };
