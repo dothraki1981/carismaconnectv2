@@ -18,21 +18,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { mockSubjects, mockClasses } from "@/lib/mock-data";
-import type { Class, Subject } from "@/lib/types";
+import { mockStudents } from "@/lib/mock-data";
+import type { Student } from "@/lib/types";
 
 export default function GradesPage() {
-  const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
-  const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
-
-  const handleSubjectChange = (subjectId: string) => {
-    setSelectedSubjectId(subjectId);
-    setSelectedClassId(null); // Reset class selection when subject changes
-  };
-
-  const filteredClasses = selectedSubjectId
-    ? mockClasses.filter(c => c.subjectIds?.includes(selectedSubjectId))
-    : [];
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
 
   return (
     <div className="flex flex-col items-center gap-6">
@@ -40,59 +30,32 @@ export default function GradesPage() {
         <CardHeader>
           <CardTitle>Cadastro de Notas e Faltas</CardTitle>
           <CardDescription>
-            Selecione a disciplina e a turma para registrar as notas e faltas.
+            Selecione o aluno para registrar as notas e faltas por disciplina.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="subject">Disciplina</Label>
-              <Select onValueChange={handleSubjectChange}>
-                <SelectTrigger id="subject">
-                  <SelectValue placeholder="Selecione uma disciplina" />
-                </SelectTrigger>
-                <SelectContent>
-                  {mockSubjects.map((subject) => (
-                    <SelectItem key={subject.id} value={subject.id}>
-                      {subject.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-             <div className="space-y-2">
-              <Label htmlFor="class">Turma</Label>
-              <Select
-                onValueChange={setSelectedClassId}
-                disabled={!selectedSubjectId}
-                value={selectedClassId ?? ""}
-              >
-                <SelectTrigger id="class">
-                  <SelectValue placeholder="Selecione uma turma" />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredClasses.length > 0 ? (
-                    filteredClasses.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="no-class" disabled>
-                      Nenhuma turma para esta disciplina
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="student">Aluno</Label>
+            <Select onValueChange={setSelectedStudentId}>
+              <SelectTrigger id="student">
+                <SelectValue placeholder="Selecione um aluno" />
+              </SelectTrigger>
+              <SelectContent>
+                {mockStudents.map((student) => (
+                  <SelectItem key={student.id} value={student.id}>
+                    {student.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
           <div className="mt-4 border-t pt-6">
-             {selectedClassId ? (
-                <GradesForm selectedClassId={selectedClassId} />
+             {selectedStudentId ? (
+                <GradesForm selectedStudentId={selectedStudentId} />
              ) : (
                 <div className="text-center text-muted-foreground py-8">
-                    <p>Por favor, selecione uma disciplina e uma turma para começar.</p>
+                    <p>Por favor, selecione um aluno para começar.</p>
                 </div>
              )}
           </div>

@@ -21,13 +21,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { mockStudents } from "@/lib/mock-data";
+import { mockSubjects, mockStudents } from "@/lib/mock-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import type { Student } from "@/lib/types";
+import type { Student, Subject } from "@/lib/types";
 
 const formSchema = z.object({
-  studentId: z.string({ required_error: "Selecione um aluno." }),
+  subjectId: z.string({ required_error: "Selecione uma disciplina." }),
   grade: z.coerce.number().min(0).max(10).optional(),
   recoveryGrade: z.coerce.number().min(0).max(10).optional(),
   examGrade: z.coerce.number().min(0).max(10).optional(),
@@ -37,14 +37,14 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 type GradesFormProps = {
-  selectedClassId: string | null;
+  selectedStudentId: string | null;
 }
 
-export function GradesForm({ selectedClassId }: GradesFormProps) {
+export function GradesForm({ selectedStudentId }: GradesFormProps) {
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      studentId: "",
+      subjectId: "",
       absences: 0,
       grade: undefined,
       recoveryGrade: undefined,
@@ -61,12 +61,11 @@ export function GradesForm({ selectedClassId }: GradesFormProps) {
   const showRecovery = grade !== undefined && grade < 7;
   const showExam = showRecovery && recoveryGrade !== undefined && recoveryGrade < 7;
   
-  // TODO: Filter students by selectedClassId when the relationship is available
-  const studentsInClass: Student[] = mockStudents;
+  const student = mockStudents.find(s => s.id === selectedStudentId);
 
   function onSubmit(values: FormData) {
-    console.log("Submitting grades for class", selectedClassId, ":", values);
-    alert("Notas salvas com sucesso! (Verifique o console)");
+    console.log("Submitting grades for student", selectedStudentId, ":", values);
+    alert(`Notas salvas para ${student?.name} na disciplina selecionada! (Verifique o console)`);
     reset();
   }
 
@@ -107,26 +106,32 @@ export function GradesForm({ selectedClassId }: GradesFormProps) {
     
     return null;
   }
+  
+  if (!student) {
+    return <p className="text-center text-muted-foreground">Aluno não encontrado.</p>;
+  }
 
   return (
     <Form {...form}>
+      <h3 className="text-lg font-semibold mb-4">Lançando Notas para: {student.name}</h3>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={control}
-          name="studentId"
+          name="subjectId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Aluno</FormLabel>
+              <FormLabel>Disciplina</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione um aluno" />
+                    <SelectValue placeholder="Selecione uma disciplina" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {studentsInClass.map((student) => (
-                    <SelectItem key={student.id} value={student.id}>
-                      {student.name}
+                  {/* TODO: In a real app, this should list only subjects the student is enrolled in */}
+                  {mockSubjects.map((subject) => (
+                    <SelectItem key={subject.id} value={subject.id}>
+                      {subject.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -215,7 +220,7 @@ export function GradesForm({ selectedClassId }: GradesFormProps) {
         </Card>
 
         <div className="flex justify-end pt-4">
-          <Button type="submit" disabled={!selectedClassId}>Salvar Notas e Faltas</Button>
+          <Button type="submit" disabled={!selectedStudentId}>Salvar Notas e Faltas</Button>
         </div>
       </form>
     </Form>
