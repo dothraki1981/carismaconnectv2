@@ -40,19 +40,13 @@ export default function RootLayout({
 
   useEffect(() => {
     // Use the imported auth instance directly
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUser(user);
-        if (pathname === '/login') {
-          router.replace('/');
-        }
-      } else {
-        setUser(null);
-        if (pathname !== '/login') {
-          router.replace('/login');
-        }
-      }
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
       setLoading(false);
+      
+      if (!currentUser && pathname !== '/login') {
+        router.replace('/login');
+      }
     });
 
     return () => unsubscribe();
@@ -75,18 +69,6 @@ export default function RootLayout({
     );
   }
 
-  if (!user && pathname !== '/login') {
-     // This case should be handled by the redirect, but as a fallback
-    return (
-      <html lang="pt-BR">
-        <body>
-          <LoginPage />
-          <Toaster />
-        </body>
-      </html>
-    );
-  }
-  
   if (!user) {
     return (
        <html lang="pt-BR" suppressHydrationWarning>
@@ -100,7 +82,7 @@ export default function RootLayout({
           />
         </head>
         <body className="font-body antialiased">
-          {children}
+          <LoginPage />
           <Toaster />
         </body>
       </html>
@@ -154,7 +136,7 @@ export default function RootLayout({
                   </div>
                 </Button>
                 <div className="text-center text-xs text-sidebar-foreground/50 pt-2">
-                  Versão 2.8
+                  Versão 2.9
                 </div>
               </SidebarFooter>
             </Sidebar>
