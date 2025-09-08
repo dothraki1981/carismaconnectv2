@@ -31,8 +31,8 @@ import React from 'react';
 const formSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(2, "O nome deve ter pelo menos 2 caracteres."),
-  teacherId: z.string({ required_error: "Selecione um professor." }),
-  subjectIds: z.array(z.string()).min(1, "Selecione pelo menos uma disciplina."),
+  teacherId: z.string().optional(),
+  subjectIds: z.array(z.string()).optional(),
 });
 
 type ClassFormProps = {
@@ -85,6 +85,7 @@ export function ClassForm({ onSubmit, setOpen, classData }: ClassFormProps) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
+                  <SelectItem value="">Nenhum</SelectItem>
                   {mockTeachers.map((teacher) => (
                     <SelectItem key={teacher.id} value={teacher.id}>
                       {teacher.name}

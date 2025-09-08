@@ -36,8 +36,14 @@ export default function ClassesPage() {
     setOpen(true);
   }
 
-  const getTeacherName = (teacherId: string) => mockTeachers.find(t => t.id === teacherId)?.name || 'N/A';
-  const getSubjectNames = (subjectIds: string[]) => {
+  const getTeacherName = (teacherId?: string) => {
+    if (!teacherId) return <span className="text-muted-foreground">Não definido</span>;
+    return mockTeachers.find(t => t.id === teacherId)?.name || 'N/A';
+  }
+  const getSubjectNames = (subjectIds?: string[]) => {
+    if (!subjectIds || subjectIds.length === 0) {
+      return [<Badge key="no-subject" variant="outline">Nenhuma</Badge>];
+    }
     return subjectIds.map(id => mockSubjects.find(s => s.id === id)?.name).filter(Boolean);
   };
 
