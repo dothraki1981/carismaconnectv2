@@ -28,7 +28,6 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Printer, FileText } from "lucide-react";
-import { mockGrades } from "@/lib/mock-data";
 import type { Grade, Student, Subject } from "@/lib/types";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query } from "firebase/firestore";
@@ -38,7 +37,7 @@ export default function ReportsPage() {
   
   const [students, setStudents] = useState<Student[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [grades, setGrades] = useState<Grade[]>(mockGrades); // TODO: Migrate to Firestore
+  const [grades, setGrades] = useState<Grade[]>([]);
 
   useEffect(() => {
     const qStudents = query(collection(db, "students"));
@@ -51,11 +50,15 @@ export default function ReportsPage() {
       setSubjects(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Subject)));
     });
     
-    // TODO: Load grades from Firestore
+    const qGrades = query(collection(db, "grades"));
+    const unsubscribeGrades = onSnapshot(qGrades, (snapshot) => {
+      setGrades(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Grade)));
+    });
 
     return () => {
       unsubscribeStudents();
       unsubscribeSubjects();
+      unsubscribeGrades();
     };
   }, []);
 

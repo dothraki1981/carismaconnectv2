@@ -38,14 +38,13 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 type GradesFormProps = {
-  selectedStudentId: string;
-  onSave: (grade: Grade) => void;
+  student: Student;
+  onSave: (grade: Omit<Grade, 'id'> & { id?: string }) => Promise<void>;
   studentGrades: Grade[];
   subjects: Subject[];
-  student?: Student;
 }
 
-export function GradesForm({ selectedStudentId, onSave, studentGrades, subjects, student }: GradesFormProps) {
+export function GradesForm({ student, onSave, studentGrades, subjects }: GradesFormProps) {
   const { toast } = useToast();
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -58,7 +57,7 @@ export function GradesForm({ selectedStudentId, onSave, studentGrades, subjects,
     },
   });
 
-  const { watch, control, setValue } = form;
+  const { watch, control, setValue, handleSubmit, formState: { isSubmitting } } = form;
   const grade = watch("grade");
   const recoveryGrade = watch("recoveryGrade");
   const examGrade = watch("examGrade");
@@ -88,24 +87,20 @@ export function GradesForm({ selectedStudentId, onSave, studentGrades, subjects,
   }, [subjectId, studentGrades, setValue]);
 
 
-  function onSubmit(values: FormData) {
-    if (!student) return;
-    
-    // Find the current grade to get an ID if it exists
+  async function onSubmit(values: FormData) {
     const existingGrade = studentGrades.find(g => g.subjectId === values.subjectId);
     
-    const gradeData: Grade = {
-      id: existingGrade?.id || `g${Date.now()}`, // Use existing ID or create a new one
-      studentId: selectedStudentId,
+    const gradeData = {
+      id: existingGrade?.id, // Pass ID if it exists, otherwise it's undefined
+      studentId: student.id,
       ...values,
     };
 
-    onSave(gradeData);
+    await onSave(gradeData);
 
     toast({
       title: "Sucesso!",
       description: `Notas de ${student.name} salvas para a disciplina selecionada.`,
-      className: "bg-green-100 border-green-400 text-green-800",
     });
   }
 
@@ -138,7 +133,7 @@ export function GradesForm({ selectedStudentId, onSave, studentGrades, subjects,
         return <Badge variant="destructive" className="text-sm">Reprovado</Badge>
     }
     if (showRecovery && recoveryGrade !== undefined && recoveryGrade < 7 && !showExam) {
-         return <Badge variant="destructive" className="text-sm">Em Exame</Badge>
+         return <Badge variant="secondary" className="text-sm">Em Exame</Badge>
     }
     if (grade !== undefined && grade < 7 && !recoveryGrade) {
         return <Badge variant="destructive" className="text-sm">Em Recuperação</Badge>
@@ -154,7 +149,7 @@ export function GradesForm({ selectedStudentId, onSave, studentGrades, subjects,
   return (
     <Form {...form}>
       <h3 className="text-lg font-semibold mb-4">Lançando Notas para: {student.name}</h3>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={control}
           name="subjectId"
@@ -259,7 +254,9 @@ export function GradesForm({ selectedStudentId, onSave, studentGrades, subjects,
         </Card>
 
         <div className="flex justify-end pt-4">
-          <Button type="submit" disabled={!subjectId}>Salvar Notas e Faltas</Button>
+          <Button type="submit" disabled={!subjectId || isSubmitting}>
+            {isSubmitting ? 'Salvando...' : 'Salvar Notas e Faltas'}
+          </Button>
         </div>
       </form>
     </Form>

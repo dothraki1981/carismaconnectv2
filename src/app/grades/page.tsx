@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -18,19 +18,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { mockGrades } from "@/lib/mock-data";
 import type { Grade, Student, Subject } from "@/lib/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { db } from "@/lib/firebase";
-import { collection, onSnapshot, query } from "firebase/firestore";
+import { collection, onSnapshot, query, addDoc, updateDoc, doc } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 export default function GradesPage() {
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
-  const [grades, setGrades] = useState<Grade[]>(mockGrades); // TODO: Migrate to Firestore
-  
+  const [grades, setGrades] = useState<Grade[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const { toast } = useToast();
 
   useEffect(() => {
     const qStudents = query(collection(db, "students"));
@@ -43,30 +43,40 @@ export default function GradesPage() {
       setSubjects(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Subject)));
     });
 
-    // TODO: Load grades from Firestore
+    const qGrades = query(collection(db, "grades"));
+    const unsubscribeGrades = onSnapshot(qGrades, (snapshot) => {
+      setGrades(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Grade)));
+    });
 
     return () => {
       unsubscribeStudents();
       unsubscribeSubjects();
+      unsubscribeGrades();
     };
   }, []);
 
-
-  const handleSaveGrade = (gradeData: Grade) => {
-    const existingGradeIndex = grades.findIndex(
-      g => g.studentId === gradeData.studentId && g.subjectId === gradeData.subjectId
-    );
-
-    let updatedGrades;
-    if (existingGradeIndex > -1) {
-      updatedGrades = [...grades];
-      updatedGrades[existingGradeIndex] = gradeData;
-    } else {
-      updatedGrades = [...grades, gradeData];
+  const handleSaveGrade = async (gradeData: Omit<Grade, 'id'> & { id?: string }) => {
+    try {
+      if (gradeData.id) { // Editing existing grade
+        const gradeDocRef = doc(db, "grades", gradeData.id);
+        const { id, ...dataToUpdate } = gradeData;
+        await updateDoc(gradeDocRef, dataToUpdate);
+      } else { // Adding new grade
+        await addDoc(collection(db, "grades"), gradeData);
+      }
+    } catch (error) {
+      console.error("Error saving grade: ", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar as notas.",
+        variant: "destructive",
+      });
     }
-    setGrades(updatedGrades);
-     // TODO: Save grades to Firestore
   };
+
+  const selectedStudent = useMemo(() => {
+    return students.find(s => s.id === selectedStudentId) || null;
+  }, [selectedStudentId, students]);
 
   const getGradesForStudent = (studentId: string | null) => {
     if (!studentId) return [];
@@ -100,7 +110,6 @@ export default function GradesPage() {
         return <Badge className="bg-green-600 hover:bg-green-700">Aprovado</Badge>
     }
     
-    // Check recovery/exam flow
     if (grade.grade !== undefined && grade.grade < 7) {
         if (grade.recoveryGrade !== undefined && grade.recoveryGrade !== null) {
             if (grade.recoveryGrade < 7) {
@@ -145,10 +154,10 @@ export default function GradesPage() {
           </div>
           
           <div className="mt-4 border-t pt-6">
-             {selectedStudentId ? (
+             {selectedStudent ? (
                 <GradesForm 
                   key={selectedStudentId}
-                  selectedStudentId={selectedStudentId} 
+                  student={selectedStudent} 
                   onSave={handleSaveGrade}
                   studentGrades={getGradesForStudent(selectedStudentId)}
                   subjects={subjects}
