@@ -43,11 +43,30 @@ export default function StudentsPage() {
   const [open, setOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | undefined>(undefined);
 
-  const handleAddStudent = (student: Student) => {
-    if(editingStudent) {
-        setStudents(students.map(s => s.id === student.id ? student : s));
-    } else {
-        setStudents([...students, { ...student, id: (students.length + 1).toString() }]);
+  const formatCpf = (cpf: string) => {
+    const cleaned = cpf.replace(/\D/g, '');
+    if (cleaned.length !== 11) return cpf;
+    return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  };
+
+  const handleAddStudent = (student: Omit<Student, 'id'> & { id?: string }) => {
+    const cleanedCpf = student.cpf.replace(/\D/g, '');
+
+    const isDuplicate = students.some(s => {
+        const existingCpf = s.cpf.replace(/\D/g, '');
+        // If editing, check against other students. If adding, check against all.
+        return existingCpf === cleanedCpf && s.id !== student.id;
+    });
+
+    if(isDuplicate) {
+        alert("Erro: Já existe um aluno com este CPF.");
+        return;
+    }
+      
+    if(student.id) { // Editing
+        setStudents(students.map(s => s.id === student.id ? { ...s, ...student, cpf: cleanedCpf } : s));
+    } else { // Adding
+        setStudents([...students, { ...student, id: (students.length + 1).toString(), cpf: cleanedCpf }]);
     }
     setEditingStudent(undefined);
   };
@@ -96,7 +115,7 @@ export default function StudentsPage() {
                 <TableRow key={student.id}>
                   <TableCell className="font-medium">{student.name}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{student.cpf}</Badge>
+                    <Badge variant="outline">{formatCpf(student.cpf)}</Badge>
                   </TableCell>
                   <TableCell>
                     <a

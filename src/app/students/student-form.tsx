@@ -18,7 +18,9 @@ import type { Student } from "@/lib/types";
 const formSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(2, "O nome deve ter pelo menos 2 caracteres."),
-  cpf: z.string().regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, "CPF inválido."),
+  cpf: z.string().refine(value => /^\d{11}$/.test(value.replace(/[^\d]/g, "")), {
+    message: "O CPF deve conter 11 dígitos.",
+  }),
   phone: z.string().min(10, "Telefone inválido."),
 });
 
@@ -39,7 +41,11 @@ export function StudentForm({ onSubmit, setOpen, student }: StudentFormProps) {
   });
 
   function handleFormSubmit(values: z.infer<typeof formSchema>) {
-    onSubmit(values as Student);
+    const cleanedValues = {
+        ...values,
+        cpf: values.cpf.replace(/[^\d]/g, ""),
+    };
+    onSubmit(cleanedValues as Student);
     setOpen(false);
   }
 
@@ -66,7 +72,7 @@ export function StudentForm({ onSubmit, setOpen, student }: StudentFormProps) {
             <FormItem>
               <FormLabel>CPF</FormLabel>
               <FormControl>
-                <Input placeholder="000.000.000-00" {...field} />
+                <Input placeholder="Apenas números" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
