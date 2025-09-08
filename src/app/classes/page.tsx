@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -56,7 +57,8 @@ export default function ClassesPage() {
           description: "Turma atualizada com sucesso.",
         });
       } else { // Adding
-        await addDoc(collection(db, "classes"), classData);
+        const { id, ...dataToSave } = classData;
+        await addDoc(collection(db, "classes"), dataToSave);
         toast({
           title: "Sucesso!",
           description: "Turma cadastrada com sucesso.",
@@ -65,6 +67,7 @@ export default function ClassesPage() {
       setEditingClass(undefined);
       setOpen(false);
     } catch (error) {
+      console.error("Error saving class: ", error);
       toast({
         title: "Erro",
         description: "Ocorreu um erro ao salvar a turma.",
