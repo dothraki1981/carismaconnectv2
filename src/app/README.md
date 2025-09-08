@@ -1,8 +1,6 @@
 # Firebase Studio
 
-Este é um NextJS starter no Firebase Studio.
-
-Para começar, dê uma olhada em `src/app/page.tsx`.
+Este é um projeto Next.js no Firebase Studio.
 
 ---
 
@@ -10,65 +8,71 @@ Para começar, dê uma olhada em `src/app/page.tsx`.
 
 Siga estes passos para conectar e enviar seu projeto para um repositório recém-criado no GitHub.
 
-**1. Iniciar o repositório local (Você já fez isso!)**
+### Passo 1: Inicialize o Repositório Local
+Este comando prepara sua pasta de projeto para o Git.
 ```bash
 git init -b main
 ```
 
-**2. Adicionar todos os arquivos ao controle do Git**
+### Passo 2: Adicione Todos os Arquivos
+Este comando adiciona todos os seus arquivos ao controle do Git.
 ```bash
 git add .
 ```
 
-**3. Salvar suas alterações (Commit inicial)**
+### Passo 3: Salve Suas Alterações (Commit)
+Este comando salva suas alterações com uma mensagem.
 ```bash
-git commit -m "Commit inicial do projeto Carisma Connect"
+git commit -m "Commit inicial do projeto"
 ```
 
-**4. Conectar seu projeto ao repositório do GitHub**
-**Importante:** Copie a URL do seu **novo** repositório no GitHub e substitua no comando abaixo.
+### Passo 4: Conecte ao Repositório do GitHub
+**Importante:** Substitua a URL abaixo pela URL do seu **novo** repositório no GitHub.
 ```bash
 git remote add origin https://github.com/seu-usuario/seu-novo-repositorio.git
 ```
 
-**5. Enviar o código e configurar o rastreamento**
-Este é o passo final e mais importante. O comando `push` envia seus arquivos, e a flag `-u` (ou `--set-upstream`) configura a conexão permanente entre sua branch local e a do GitHub.
+### Passo 5: Envie o Código e Configure o Rastreamento
+Este é o comando final e mais importante. Ele envia seus arquivos e cria a conexão permanente entre seu computador e o GitHub.
 ```bash
-git push -u origin main
+git push --set-upstream origin main
 ```
-
 ---
+
 ### Para Atualizações do Dia a Dia
 
-Após a configuração inicial, use apenas estes três comandos para enviar suas novas alterações:
+Após a configuração inicial, use apenas estes três comandos para enviar novas alterações:
 
-**1. Preparar as alterações**
-```bash
-git add .
-```
-
-**2. Salvar as alterações**
-```bash
-git commit -m "Descreva suas alterações aqui"
-```
-
-**3. Enviar para o GitHub**
-```bash
-git push
-```
+1.  **Preparar as alterações:** `git add .`
+2.  **Salvar as alterações:** `git commit -m "Descreva suas alterações aqui"`
+3.  **Enviar para o GitHub:** `git push`
 
 ---
 
 ## Solução de Problemas Comuns
 
-### Erro: `remote origin already exists`
+### Erro 1: `remote origin already exists`
 
-**O que significa:** Você tentou conectar seu projeto a um repositório (`git remote add origin ...`), mas ele já está conectado a outro.
+**O que significa:** Você tentou conectar (`add`) seu projeto a um repositório, mas ele já está conectado a outro.
 
-**Como resolver:** Em vez de adicionar um novo, você deve **atualizar** a URL do `origin` existente. Use o comando `set-url`.
+**Como resolver:** Em vez de adicionar, **atualize** a URL do `origin` existente com o comando `set-url`.
 
 ```bash
-# Substitua a URL pela do seu NOVO repositório
+# Substitua pela URL do seu NOVO repositório
 git remote set-url origin https://github.com/seu-usuario/seu-novo-repositorio.git
 ```
-Depois disso, você pode fazer o `git push` normalmente.
+Depois disso, você pode tentar o `git push` novamente.
+
+### Erro 2: `[rejected] (fetch first)` ou `(non-fast-forward)`
+
+**O que significa:** O repositório no GitHub tem alterações (como um README inicial) que seu computador não tem. Você precisa baixar essas alterações antes de poder enviar as suas.
+
+**Como resolver:** Use `git pull --rebase` para baixar as alterações remotas e colocar as suas por cima.
+
+```bash
+# 1. Puxe as alterações do GitHub
+git pull origin main --rebase
+
+# 2. Agora envie suas alterações
+git push
+```
