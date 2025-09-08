@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from "react";
@@ -17,11 +18,11 @@ export default function ClassesPage() {
   const [open, setOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<Class | undefined>(undefined);
 
-  const handleFormSubmit = (classData: Class) => {
+  const handleFormSubmit = (classData: Partial<Class>) => {
     if (editingClass) {
-      setClasses(classes.map(c => c.id === classData.id ? classData : c));
+       setClasses(classes.map(c => c.id === editingClass.id ? { ...c, name: classData.name! } : c));
     } else {
-      setClasses([...classes, { ...classData, id: `c${classes.length + 1}` }]);
+      setClasses([...classes, { ...classData, id: `c${classes.length + 1}` } as Class]);
     }
     setEditingClass(undefined);
   };
