@@ -7,8 +7,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { PlusCircle, MoreHorizontal, FilePen, Trash2 } from "lucide-react";
 import { ClassForm } from "./class-form";
-import type { Class, Teacher, Subject } from "@/lib/types";
-import { Badge } from "@/components/ui/badge";
+import type { Class } from "@/lib/types";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
@@ -26,9 +25,6 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function ClassesPage() {
   const [classes, setClasses] = useState<Class[]>([]);
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-
   const [open, setOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<Class | undefined>(undefined);
   const [deletingClass, setDeletingClass] = useState<Class | null>(null);
@@ -44,28 +40,8 @@ export default function ClassesPage() {
       setClasses(classesData);
     });
 
-    const qTeachers = query(collection(db, "teachers"));
-    const unsubscribeTeachers = onSnapshot(qTeachers, (querySnapshot) => {
-      const teachersData: Teacher[] = [];
-      querySnapshot.forEach((doc) => {
-        teachersData.push({ ...doc.data(), id: doc.id } as Teacher);
-      });
-      setTeachers(teachersData);
-    });
-
-    const qSubjects = query(collection(db, "subjects"));
-    const unsubscribeSubjects = onSnapshot(qSubjects, (querySnapshot) => {
-      const subjectsData: Subject[] = [];
-      querySnapshot.forEach((doc) => {
-        subjectsData.push({ ...doc.data(), id: doc.id } as Subject);
-      });
-      setSubjects(subjectsData);
-    });
-
     return () => {
       unsubscribeClasses();
-      unsubscribeTeachers();
-      unsubscribeSubjects();
     };
   }, []);
 
@@ -126,18 +102,6 @@ export default function ClassesPage() {
     setOpen(true);
   }
 
-  const getTeacherName = (teacherId?: string) => {
-    if (!teacherId) return <span className="text-muted-foreground">Não definido</span>;
-    return teachers.find(t => t.id === teacherId)?.name || 'N/A';
-  }
-  
-  const getSubjectNames = (subjectIds?: string[]) => {
-    if (!subjectIds || subjectIds.length === 0) {
-      return [<Badge key="no-subject" variant="outline">Nenhuma</Badge>];
-    }
-    return subjectIds.map(id => subjects.find(s => s.id === id)?.name).filter(Boolean);
-  };
-
   return (
     <>
       <Dialog open={open} onOpenChange={setOpen}>
@@ -146,7 +110,7 @@ export default function ClassesPage() {
             <div>
               <CardTitle>Turmas</CardTitle>
               <CardDescription>
-                Gerencie as turmas e suas associações.
+                Gerencie as turmas do sistema.
               </CardDescription>
             </div>
             <DialogTrigger asChild>
@@ -161,8 +125,6 @@ export default function ClassesPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome da Turma</TableHead>
-                  <TableHead>Professor</TableHead>
-                  <TableHead>Disciplinas</TableHead>
                   <TableHead>
                     <span className="sr-only">Ações</span>
                   </TableHead>
@@ -172,12 +134,6 @@ export default function ClassesPage() {
                 {classes.map((c) => (
                   <TableRow key={c.id}>
                     <TableCell className="font-medium">{c.name}</TableCell>
-                    <TableCell>{getTeacherName(c.teacherId)}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {getSubjectNames(c.subjectIds).map(name => <Badge key={name} variant="secondary">{name}</Badge>)}
-                      </div>
-                    </TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -216,8 +172,6 @@ export default function ClassesPage() {
             onSubmit={handleSaveClass}
             setOpen={setOpen}
             classData={editingClass}
-            teachers={teachers}
-            subjects={subjects}
           />
         </DialogContent>
       </Dialog>

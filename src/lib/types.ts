@@ -21,8 +21,6 @@ export interface Subject {
 export interface Class {
   id: string;
   name: string;
-  teacherId?: string;
-  subjectIds?: string[];
 }
 
 export interface Grade {
