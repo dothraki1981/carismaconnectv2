@@ -2,6 +2,8 @@
 
 Este é um projeto Next.js gerado pelo Firebase Studio.
 
+**Nota Importante sobre o Fluxo de Trabalho:** As alterações de código que o assistente de IA faz são aplicadas **localmente** no seu ambiente do Firebase Studio. Para que essas alterações sejam salvas no seu repositório e publicadas na sua URL do Firebase, você precisa **manualmente** executar os comandos `git add`, `git commit` e `git push` no seu terminal.
+
 ## Como Rodar o Projeto Localmente
 
 Para ver e interagir com sua aplicação, você precisa iniciar o servidor de desenvolvimento.
