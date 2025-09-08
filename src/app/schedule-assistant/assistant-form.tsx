@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState, useFormStatus } from "react";
 import {
   intelligentSchedulingAssistant,
   type IntelligentSchedulingAssistantOutput,
@@ -30,7 +31,7 @@ function SubmitButton() {
 }
 
 export function AssistantForm() {
-  const [state, formAction] = useFormState(
+  const [state, formAction] = useActionState(
     async (
       prevState: typeof initialState,
       formData: FormData
