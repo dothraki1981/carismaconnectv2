@@ -77,13 +77,18 @@ git remote add origin https://github.com/your-user/your-new-repository.git
 git add .
 git commit -m "Commit inicial"
 git pull origin main --rebase
-git push -u origin main
 ```
-*Se o `push` falhar com um erro `(non-fast-forward)`, use `git push --force origin main` apenas na primeira vez.*
+*O comando `pull` acima é importante para sincronizar o histórico antes de enviar.*
+
+**4. Envie e configure a conexão permanente:**
+```bash
+git push --set-upstream origin main
+```
+*Este comando (`-u` ou `--set-upstream`) é crucial. Ele envia seu código e diz ao Git para "lembrar" desta conexão para sempre.*
 
 ### Para o Dia a Dia
 
-Depois da primeira configuração, use apenas estes comandos:
+Depois da primeira configuração, use apenas estes comandos simples:
 ```bash
 git add .
 git commit -m "Sua mensagem de alteração"
