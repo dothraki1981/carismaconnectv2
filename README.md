@@ -6,47 +6,53 @@ To get started, take a look at src/app/page.tsx.
 
 ---
 
-## Como Gerenciar seu Código no GitHub
+## How to Push to a **New** GitHub Repository
 
-### Para a Primeira Vez (Configuração Inicial)
+Follow these steps to connect and push your project to a newly created repository on GitHub.
 
-Use estes passos apenas se estiver configurando o repositório pela primeira vez.
-
-**1. Iniciar o repositório local**
+**1. Initialize the local repository (You've already done this!)**
 ```bash
 git init -b main
 ```
 
-**2. Conectar seu repositório local ao GitHub**
-**Importante:** Crie um novo repositório no GitHub primeiro e substitua a URL abaixo.
+**2. Add all files to Git tracking**
 ```bash
-git remote add origin https://github.com/seu-usuario/seu-repositorio.git
+git add .
 ```
 
-**3. Enviar o código e conectar a branch**
-Este comando envia seu código e também conecta sua branch local `main` com a branch remota `main` no GitHub. Você só precisa usar o `-u` na primeira vez.
+**3. Save your changes (Initial Commit)**
+```bash
+git commit -m "Initial commit for Carisma Connect project"
+```
+
+**4. Connect your project to the GitHub repository**
+**Important:** Copy the URL of your **new** repository from GitHub and replace it in the command below.
+```bash
+git remote add origin https://github.com/your-user/your-new-repository.git
+```
+
+**5. Push the code and set up tracking**
+This command sends your files and sets up the connection so that future `git push` commands work without extra arguments.
 ```bash
 git push -u origin main
 ```
 
 ---
+### For Day-to-Day Updates
 
-### Para Atualizações do Dia a Dia
+After the initial setup, use only these three commands to send your new changes:
 
-Use os seguintes comandos para salvar e enviar suas alterações para o GitHub.
-
-**1. Preparar todas as suas alterações**
+**1. Stage the changes**
 ```bash
 git add .
 ```
 
-**2. Salvar suas alterações (Commit)**
-Use uma mensagem que descreva o que você mudou.
+**2. Save the changes**
 ```bash
-git commit -m "Descreva as alterações que você fez aqui"
+git commit -m "Describe your changes here"
 ```
 
-**3. Enviar as alterações para o GitHub**
+**3. Push to GitHub**
 ```bash
 git push
 ```
