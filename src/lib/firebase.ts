@@ -1,8 +1,8 @@
 
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
-import { getFirestore, Firestore, initializeFirestore, memoryLocalCache } from "firebase/firestore";
-import { getAuth, Auth, initializeAuth, browserLocalPersistence } from "firebase/auth";
+import { getFirestore, Firestore } from "firebase/firestore";
+import { getAuth, Auth } from "firebase/auth";
 
 // Your web app's Firebase configuration - Synced with your Firebase project
 const firebaseConfig = {
@@ -15,36 +15,10 @@ const firebaseConfig = {
   measurementId: ""
 };
 
-// Singleton pattern to initialize Firebase services safely in Next.js
-let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
+// Initialize Firebase for SSR
+const app: FirebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
-if (typeof window !== 'undefined') {
-    if (getApps().length === 0) {
-        app = initializeApp(firebaseConfig);
-        auth = initializeAuth(app, { persistence: browserLocalPersistence });
-        db = initializeFirestore(app, { localCache: memoryLocalCache() });
-    } else {
-        app = getApp();
-        auth = getAuth(app);
-        db = getFirestore(app);
-    }
-}
-
-
-// Fallback for server-side or other environments
-if (!app) {
-    app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-}
-if (!auth) {
-    // This will throw if called on server, but it's a fallback.
-    // The client-side logic above should handle initialization.
-    auth = getAuth(app);
-}
-if (!db) {
-    db = getFirestore(app);
-}
-
+const auth: Auth = getAuth(app);
+const db: Firestore = getFirestore(app);
 
 export { app, auth, db };
