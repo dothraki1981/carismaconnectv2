@@ -72,9 +72,9 @@ export function GradesForm({ student, onSave, studentGrades, subjects }: GradesF
     if (subjectId) {
       const existingGrade = studentGrades.find(g => g.subjectId === subjectId);
       if (existingGrade) {
-        setValue("grade", existingGrade.grade);
-        setValue("recoveryGrade", existingGrade.recoveryGrade);
-        setValue("examGrade", existingGrade.examGrade);
+        setValue("grade", existingGrade.grade ?? undefined);
+        setValue("recoveryGrade", existingGrade.recoveryGrade ?? undefined);
+        setValue("examGrade", existingGrade.examGrade ?? undefined);
         setValue("absences", existingGrade.absences);
       } else {
         // Reset fields if switching to a subject with no grade data
