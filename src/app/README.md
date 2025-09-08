@@ -32,7 +32,7 @@ git remote add origin https://github.com/seu-usuario/seu-novo-repositorio.git
 ```
 
 **5. Enviar o código e configurar o rastreamento**
-Este comando envia seus arquivos e configura a conexão para que futuros `git push` funcionem sem argumentos extras.
+Este é o passo final e mais importante. O comando `push` envia seus arquivos, e a flag `-u` (ou `--set-upstream`) configura a conexão permanente entre sua branch local e a do GitHub.
 ```bash
 git push -u origin main
 ```

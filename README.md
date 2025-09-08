@@ -32,7 +32,7 @@ git remote add origin https://github.com/your-user/your-new-repository.git
 ```
 
 **5. Push the code and set up tracking**
-This command sends your files and sets up the connection so that future `git push` commands work without extra arguments.
+This is the final and most important step. The `push` command sends your files, and the `-u` (or `--set-upstream`) flag sets up the permanent connection between your local branch and the one on GitHub.
 ```bash
 git push -u origin main
 ```
