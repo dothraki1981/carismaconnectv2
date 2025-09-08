@@ -22,28 +22,30 @@ import type { Grade, Student, Subject } from "@/lib/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { db } from "@/lib/firebase";
-import { collection, addDoc, updateDoc, doc } from "firebase/firestore";
+import { ref, set, push, update } from "firebase/database";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestoreCollection } from "@/hooks/use-firestore-query";
+import { useRealtimeDatabaseCollection as useDbCollection } from "@/hooks/use-firestore-query";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function GradesPage() {
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   
-  const { data: grades, refresh: refreshGrades } = useFirestoreCollection<Grade>("grades");
-  const { data: students } = useFirestoreCollection<Student>("students");
-  const { data: subjects } = useFirestoreCollection<Subject>("subjects");
+  const { data: grades, refresh: refreshGrades } = useDbCollection<Grade>("grades");
+  const { data: students } = useDbCollection<Student>("students");
+  const { data: subjects } = useDbCollection<Subject>("subjects");
   const { toast } = useToast();
 
   const handleSaveGrade = async (gradeData: Omit<Grade, 'id'> & { id?: string }) => {
     try {
       if (gradeData.id) { // Editing existing grade
-        const gradeDocRef = doc(db, "grades", gradeData.id);
+        const gradeRef = ref(db, `grades/${gradeData.id}`);
         const { id, ...dataToUpdate } = gradeData;
-        await updateDoc(gradeDocRef, dataToUpdate);
+        await set(gradeRef, dataToUpdate);
       } else { // Adding new grade
+        const gradesRef = ref(db, "grades");
+        const newGradeRef = push(gradesRef);
         const { id, ...dataToSave } = gradeData;
-        await addDoc(collection(db, "grades"), dataToSave);
+        await set(newGradeRef, dataToSave);
       }
       refreshGrades(); // Refresh grades after saving
     } catch (error) {

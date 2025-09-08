@@ -48,14 +48,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { db } from "@/lib/firebase";
-import { addDoc, collection, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { ref, set, push, remove } from "firebase/database";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestoreCollection } from "@/hooks/use-firestore-query";
+import { useRealtimeDatabaseCollection as useDbCollection } from "@/hooks/use-firestore-query";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function StudentsPage() {
-  const { data: students, loading: loadingStudents, refresh: refreshStudents } = useFirestoreCollection<Student>("students");
-  const { data: classes, loading: loadingClasses } = useFirestoreCollection<Class>("classes");
+  const { data: students, loading: loadingStudents, refresh: refreshStudents } = useDbCollection<Student>("students");
+  const { data: classes, loading: loadingClasses } = useDbCollection<Class>("classes");
   
   const [open, setOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | undefined>(undefined);
@@ -76,16 +76,18 @@ export default function StudentsPage() {
   const handleSaveStudent = async (studentData: Omit<Student, 'id'> & { id?: string }) => {
     try {
       if (studentData.id) { // Editing
-        const studentDocRef = doc(db, "students", studentData.id);
+        const studentRef = ref(db, `students/${studentData.id}`);
         const { id, ...dataToUpdate } = studentData;
-        await updateDoc(studentDocRef, dataToUpdate);
+        await set(studentRef, dataToUpdate);
         toast({
           title: "Sucesso!",
           description: "Aluno atualizado com sucesso.",
         });
       } else { // Adding
+        const studentsRef = ref(db, "students");
+        const newStudentRef = push(studentsRef);
         const { id, ...dataToSave } = studentData;
-        await addDoc(collection(db, "students"), dataToSave);
+        await set(newStudentRef, dataToSave);
         toast({
           title: "Sucesso!",
           description: "Aluno cadastrado com sucesso.",
@@ -106,7 +108,8 @@ export default function StudentsPage() {
   const handleDeleteStudent = async () => {
     if (!deletingStudent) return;
     try {
-      await deleteDoc(doc(db, "students", deletingStudent.id));
+      const studentRef = ref(db, `students/${deletingStudent.id}`);
+      await remove(studentRef);
       toast({
         title: "Sucesso!",
         description: `Aluno ${deletingStudent.name} deletado com sucesso.`,

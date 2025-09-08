@@ -21,14 +21,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { db } from "@/lib/firebase";
-import { collection, addDoc, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { ref, set, push, remove } from "firebase/database";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestoreCollection } from "@/hooks/use-firestore-query";
+import { useRealtimeDatabaseCollection as useDbCollection } from "@/hooks/use-firestore-query";
 import { Skeleton } from "@/components/ui/skeleton";
 
 
 export default function ClassesPage() {
-  const { data: classes, loading, refresh: refreshClasses } = useFirestoreCollection<Class>("classes");
+  const { data: classes, loading, refresh: refreshClasses } = useDbCollection<Class>("classes");
   const [open, setOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<Class | undefined>(undefined);
   const [deletingClass, setDeletingClass] = useState<Class | null>(null);
@@ -37,16 +37,18 @@ export default function ClassesPage() {
   const handleSaveClass = async (classData: Omit<Class, 'id'> & { id?: string }) => {
     try {
       if (classData.id) { // Editing
-        const classDocRef = doc(db, "classes", classData.id);
+        const classRef = ref(db, `classes/${classData.id}`);
         const { id, ...dataToUpdate } = classData;
-        await updateDoc(classDocRef, dataToUpdate);
+        await set(classRef, dataToUpdate);
         toast({
           title: "Sucesso!",
           description: "Turma atualizada com sucesso.",
         });
       } else { // Adding
+        const classesRef = ref(db, "classes");
+        const newClassRef = push(classesRef);
         const { id, ...dataToSave } = classData;
-        await addDoc(collection(db, "classes"), dataToSave);
+        await set(newClassRef, dataToSave);
         toast({
           title: "Sucesso!",
           description: "Turma cadastrada com sucesso.",
@@ -68,7 +70,8 @@ export default function ClassesPage() {
   const handleDeleteClass = async () => {
     if (!deletingClass) return;
     try {
-      await deleteDoc(doc(db, "classes", deletingClass.id));
+      const classRef = ref(db, `classes/${deletingClass.id}`);
+      await remove(classRef);
       toast({
         title: "Sucesso!",
         description: `Turma ${deletingClass.name} deletada com sucesso.`,

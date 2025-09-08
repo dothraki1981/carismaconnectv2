@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useFirestoreCollection } from "@/hooks/use-firestore-query";
+import { useRealtimeDatabaseCollection as useDbCollection } from "@/hooks/use-firestore-query";
 import {
   Card,
   CardContent,
@@ -18,10 +18,10 @@ import {
 import type { Student, Teacher, Class, Subject } from "@/lib/types";
 
 export default function DashboardPage() {
-  const { data: students } = useFirestoreCollection<Student>("students");
-  const { data: teachers } = useFirestoreCollection<Teacher>("teachers");
-  const { data: classes } = useFirestoreCollection<Class>("classes");
-  const { data: subjects } = useFirestoreCollection<Subject>("subjects");
+  const { data: students } = useDbCollection<Student>("students");
+  const { data: teachers } = useDbCollection<Teacher>("teachers");
+  const { data: classes } = useDbCollection<Class>("classes");
+  const { data: subjects } = useDbCollection<Subject>("subjects");
 
   const stats = [
     {

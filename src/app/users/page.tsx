@@ -37,13 +37,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { db } from "@/lib/firebase";
-import { doc, updateDoc } from "firebase/firestore";
+import { ref, set } from "firebase/database";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestoreCollection } from "@/hooks/use-firestore-query";
+import { useRealtimeDatabaseCollection as useDbCollection } from "@/hooks/use-firestore-query";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function UsersPage() {
-  const { data: users, loading, refresh: refreshUsers } = useFirestoreCollection<AppUser>("users");
+  const { data: users, loading, refresh: refreshUsers } = useDbCollection<AppUser>("users");
   
   const [open, setOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<AppUser | undefined>(undefined);
@@ -51,8 +51,13 @@ export default function UsersPage() {
 
   const handleSaveUser = async (userData: AppUser) => {
     try {
-      const userDocRef = doc(db, "users", userData.uid);
-      await updateDoc(userDocRef, { role: userData.role });
+      const userRef = ref(db, `users/${userData.uid}`);
+      // In RTDB, roles might be stored differently, but for now we update just the role
+      await set(userRef, {
+          displayName: userData.displayName,
+          email: userData.email,
+          role: userData.role
+      });
       toast({
         title: "Sucesso!",
         description: "Usuário atualizado com sucesso.",

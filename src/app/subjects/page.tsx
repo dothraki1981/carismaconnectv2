@@ -21,13 +21,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { db } from "@/lib/firebase";
-import { collection, addDoc, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { ref, set, push, remove } from "firebase/database";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestoreCollection } from "@/hooks/use-firestore-query";
+import { useRealtimeDatabaseCollection as useDbCollection } from "@/hooks/use-firestore-query";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SubjectsPage() {
-  const { data: subjects, loading, refresh: refreshSubjects } = useFirestoreCollection<Subject>("subjects");
+  const { data: subjects, loading, refresh: refreshSubjects } = useDbCollection<Subject>("subjects");
   const [open, setOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | undefined>(undefined);
   const [deletingSubject, setDeletingSubject] = useState<Subject | null>(null);
@@ -36,16 +36,18 @@ export default function SubjectsPage() {
   const handleSaveSubject = async (subjectData: Omit<Subject, 'id'> & { id?: string }) => {
     try {
       if (subjectData.id) { // Editing
-        const subjectDocRef = doc(db, "subjects", subjectData.id);
+        const subjectRef = ref(db, `subjects/${subjectData.id}`);
         const { id, ...dataToUpdate } = subjectData;
-        await updateDoc(subjectDocRef, dataToUpdate);
+        await set(subjectRef, dataToUpdate);
         toast({
           title: "Sucesso!",
           description: "Disciplina atualizada com sucesso.",
         });
       } else { // Adding
+        const subjectsRef = ref(db, "subjects");
+        const newSubjectRef = push(subjectsRef);
         const { id, ...dataToSave } = subjectData;
-        await addDoc(collection(db, "subjects"), dataToSave);
+        await set(newSubjectRef, dataToSave);
         toast({
           title: "Sucesso!",
           description: "Disciplina cadastrada com sucesso.",
@@ -66,7 +68,8 @@ export default function SubjectsPage() {
   const handleDeleteSubject = async () => {
     if (!deletingSubject) return;
     try {
-      await deleteDoc(doc(db, "subjects", deletingSubject.id));
+      const subjectRef = ref(db, `subjects/${deletingSubject.id}`);
+      await remove(subjectRef);
       toast({
         title: "Sucesso!",
         description: `Disciplina ${deletingSubject.name} deletada com sucesso.`,

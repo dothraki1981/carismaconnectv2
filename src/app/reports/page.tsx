@@ -29,14 +29,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Printer, FileText } from "lucide-react";
 import type { Grade, Student, Subject } from "@/lib/types";
-import { useFirestoreCollection } from "@/hooks/use-firestore-query";
+import { useRealtimeDatabaseCollection as useDbCollection } from "@/hooks/use-firestore-query";
 
 export default function ReportsPage() {
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
   
-  const { data: students } = useFirestoreCollection<Student>("students");
-  const { data: subjects } = useFirestoreCollection<Subject>("subjects");
-  const { data: grades } = useFirestoreCollection<Grade>("grades");
+  const { data: students } = useDbCollection<Student>("students");
+  const { data: subjects } = useDbCollection<Subject>("subjects");
+  const { data: grades } = useDbCollection<Grade>("grades");
 
   const selectedSubject = useMemo(() => {
     return subjects.find((s) => s.id === selectedSubjectId) || null;
