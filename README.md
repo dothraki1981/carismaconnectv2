@@ -24,6 +24,29 @@ Após executar o comando, o terminal mostrará uma mensagem indicando que o serv
 
 ---
 
+## Como Enviar Atualizações para o GitHub (Dia a Dia)
+
+Depois que a conexão inicial com o GitHub foi configurada, use estes três comandos simples para enviar suas atualizações:
+
+**1. Adicione todos os arquivos modificados:**
+```bash
+git add .
+```
+
+**2. Crie um "pacote" de alterações com uma mensagem descritiva:**
+```bash
+git commit -m "Sua mensagem descrevendo a alteração"
+```
+*(Ex: `git commit -m "Conecta tela de professores ao Firebase"`)*
+
+**3. Envie o pacote para o GitHub:**
+```bash
+git push
+```
+É só isso! Como a conexão já foi estabelecida, o Git sabe exatamente para onde enviar seu código.
+
+---
+
 ## Como Publicar no Firebase (Obter URL Pública)
 
 Para que seu projeto tenha uma URL pública e acessível a todos, você precisa publicá-lo usando o **Firebase App Hosting**. O processo é automatizado através do seu repositório no GitHub.
@@ -57,62 +80,26 @@ Após alguns minutos, o Firebase irá construir seu projeto e te dará uma URL p
 
 ---
 
-## Como Enviar para o GitHub
+## Solução de Problemas Comuns e Comandos Iniciais
 
-Use estes comandos para sincronizar suas alterações com o GitHub.
+Esta seção é principalmente para a **primeira vez** que você conecta o projeto a um repositório novo.
 
-### Para a Primeira Vez (com um novo repositório)
-
-**1. Inicialize o Git (se ainda não fez):**
-```bash
-git init -b main
-```
-
-**2. Adicione a URL do seu repositório:**
-```bash
-# Substitua pela URL do seu novo repositório
-git remote add origin https://github.com/your-user/your-new-repository.git
-```
-
-**3. Adicione, confirme e envie seus arquivos (configure a conexão):**
-```bash
-git add .
-git commit -m "Commit inicial"
-git pull origin main --rebase
-```
-*O comando `pull` acima é importante para sincronizar o histórico antes de enviar.*
-
-**4. Envie e configure a conexão permanente:**
-```bash
-git push --set-upstream origin main
-```
-*Este comando (`-u` ou `--set-upstream`) é crucial. Ele envia seu código e diz ao Git para "lembrar" desta conexão para sempre.*
-
-### Para o Dia a Dia
-
-Depois da primeira configuração, use apenas estes comandos simples:
-```bash
-git add .
-git commit -m "Sua mensagem de alteração"
-git pull origin main --rebase
-git push
-```
-
-### Solução de Problemas Comuns
-
-**"remote origin already exists"**
+#### Erro: `remote origin already exists`
 Se você receber este erro, significa que já existe uma conexão. Use o comando abaixo para atualizá-la para o novo repositório:
 ```bash
 git remote set-url origin URL_DO_NOVO_REPOSITORIO
 ```
 
-**"[rejected] (fetch first) ou (non-fast-forward)"**
-Isso acontece quando o histórico do GitHub e o seu estão dessincronizados. Para resolver:
+#### Erro: `[rejected] (fetch first)` ou `(non-fast-forward)`
+Isso acontece quando o histórico do GitHub e o seu estão dessincronizados. Para resolver, puxe as alterações do GitHub primeiro e depois envie as suas:
 ```bash
 git pull origin main --rebase
 git push
 ```
-Se isso não funcionar em um repositório novo, o `push` forçado pode ser necessário (use com cuidado):
+
+#### Erro: `The current branch main has no upstream branch`
+Este erro ocorre na primeira vez que você envia o código. O Git precisa que você confirme para onde a sua branch `main` deve apontar.
 ```bash
-git push --force origin main
+git push --set-upstream origin main
 ```
+Depois de executar este comando uma vez, você poderá usar apenas `git push` nas próximas vezes.
