@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Teacher, Subject } from "@/lib/types";
+import { Badge } from "@/components/ui/badge";
 
 const formSchema = z.object({
   id: z.string().optional(),
@@ -42,28 +43,43 @@ export function TeacherForm({ onSubmit, setOpen, teacher, subjects }: TeacherFor
     },
   });
 
-  const { formState: { isSubmitting }, control, setValue } = form;
+  const { formState: { isSubmitting }, control, setValue, watch } = form;
+  const selectedSubjectIds = watch("subjectIds") || [];
 
   async function handleFormSubmit(values: z.infer<typeof formSchema>) {
     await onSubmit(values);
   }
 
-  // This is a workaround to handle multi-select with shadcn's Select component
   const handleSubjectChange = (subjectId: string) => {
-    const currentSubjectIds = control._getWatch("subjectIds") || [];
-    const newSubjectIds = currentSubjectIds.includes(subjectId)
-      ? currentSubjectIds.filter((id) => id !== subjectId)
-      : [...currentSubjectIds, subjectId];
+    const newSubjectIds = selectedSubjectIds.includes(subjectId)
+      ? selectedSubjectIds.filter((id) => id !== subjectId)
+      : [...selectedSubjectIds, subjectId];
     setValue("subjectIds", newSubjectIds, { shouldValidate: true });
   };
   
-  const selectedSubjects = subjects.filter(s => form.watch("subjectIds")?.includes(s.id));
+  const getSelectedSubjectsDisplay = () => {
+    if (selectedSubjectIds.length === 0) {
+      return "Selecione...";
+    }
+    return (
+      <div className="flex flex-wrap gap-1">
+        {selectedSubjectIds.map(id => {
+          const subject = subjects.find(s => s.id === id);
+          return subject ? (
+            <Badge key={id} variant="secondary" className="font-normal">
+              {subject.name}
+            </Badge>
+          ) : null;
+        })}
+      </div>
+    );
+  };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
         <FormField
-          control={form.control}
+          control={control}
           name="name"
           render={({ field }) => (
             <FormItem>
@@ -76,7 +92,7 @@ export function TeacherForm({ onSubmit, setOpen, teacher, subjects }: TeacherFor
           )}
         />
         <FormField
-          control={form.control}
+          control={control}
           name="phone"
           render={({ field }) => (
             <FormItem>
@@ -91,20 +107,14 @@ export function TeacherForm({ onSubmit, setOpen, teacher, subjects }: TeacherFor
          <FormField
           control={control}
           name="subjectIds"
-          render={({ field }) => (
+          render={() => (
             <FormItem>
               <FormLabel>Disciplinas</FormLabel>
                 <Select onValueChange={handleSubjectChange}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione as disciplinas" asChild>
-                         <div className="flex flex-wrap gap-1">
-                          {selectedSubjects.length > 0 ? selectedSubjects.map(s => (
-                            <span key={s.id} className="bg-muted text-muted-foreground text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">
-                              {s.name}
-                            </span>
-                          )) : "Selecione..."}
-                        </div>
+                      <SelectValue asChild>
+                         {getSelectedSubjectsDisplay()}
                       </SelectValue>
                     </SelectTrigger>
                   </FormControl>
