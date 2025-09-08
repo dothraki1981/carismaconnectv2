@@ -24,7 +24,7 @@ git remote add origin https://github.com/seu-usuario/seu-repositorio.git
 ```
 
 **3. Enviar o código e conectar a branch**
-Este comando envia seu código e também conecta sua branch local `main` com a branch remota `main` no GitHub. **Você só precisa usar o `-u` na primeira vez.**
+Este comando envia seu código e também conecta sua branch local `main` com a branch remota `main` no GitHub. Você só precisa usar o `-u` na primeira vez.
 ```bash
 git push -u origin main
 ```
@@ -50,33 +50,3 @@ git commit -m "Descreva as alterações que você fez aqui"
 ```bash
 git push
 ```
-
----
-
-### Solução de Problemas Comuns
-
-**Erro: `remote origin already exists`**
-*   **O que significa:** Você já conectou um repositório remoto.
-*   **Solução:** Se você quer **mudar** a URL (apontar para um novo repositório), use:
-    ```bash
-    git remote set-url origin https://github.com/seu-usuario/novo-repositorio.git
-    ```
-
-**Erro: `rejected (non-fast-forward)` ou `(fetch first)`**
-*   **O que significa:** O repositório no GitHub tem alterações que seu computador não tem.
-*   **Solução:** Primeiro puxe as alterações do GitHub e depois envie as suas.
-    ```bash
-    git pull origin main --rebase
-    git push
-    ```
-
-**Erro: `fatal: Need to specify how to reconcile divergent branches`**
-*   **O que significa:** O Git quer que você decida como combinar as alterações.
-*   **Solução Momentânea:** Use o comando de pull com a estratégia definida:
-    ```bash
-    git pull origin main --rebase
-    ```
-*   **Solução Permanente:** Configure o Git para sempre usar `rebase` (recomendado):
-    ```bash
-    git config --global pull.rebase true
-    ```
