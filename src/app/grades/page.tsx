@@ -24,14 +24,15 @@ import { Badge } from "@/components/ui/badge";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, updateDoc, doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestoreQuery } from "@/hooks/use-firestore-query";
+import { useFirestoreCollection } from "@/hooks/use-firestore-query";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function GradesPage() {
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   
-  const grades = useFirestoreQuery<Grade>("grades");
-  const students = useFirestoreQuery<Student>("students");
-  const subjects = useFirestoreQuery<Subject>("subjects");
+  const { data: grades, refresh: refreshGrades } = useFirestoreCollection<Grade>("grades");
+  const { data: students } = useFirestoreCollection<Student>("students");
+  const { data: subjects } = useFirestoreCollection<Subject>("subjects");
   const { toast } = useToast();
 
   const handleSaveGrade = async (gradeData: Omit<Grade, 'id'> & { id?: string }) => {
@@ -44,6 +45,7 @@ export default function GradesPage() {
         const { id, ...dataToSave } = gradeData;
         await addDoc(collection(db, "grades"), dataToSave);
       }
+      refreshGrades(); // Refresh grades after saving
     } catch (error) {
       console.error("Error saving grade: ", error);
       toast({

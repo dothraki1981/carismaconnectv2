@@ -50,11 +50,12 @@ import {
 import { db } from "@/lib/firebase";
 import { addDoc, collection, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestoreQuery } from "@/hooks/use-firestore-query";
+import { useFirestoreCollection } from "@/hooks/use-firestore-query";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function StudentsPage() {
-  const students = useFirestoreQuery<Student>("students");
-  const classes = useFirestoreQuery<Class>("classes");
+  const { data: students, loading: loadingStudents, refresh: refreshStudents } = useFirestoreCollection<Student>("students");
+  const { data: classes, loading: loadingClasses } = useFirestoreCollection<Class>("classes");
   
   const [open, setOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | undefined>(undefined);
@@ -92,6 +93,7 @@ export default function StudentsPage() {
       }
       setEditingStudent(undefined);
       setOpen(false);
+      refreshStudents();
     } catch (error) {
        toast({
         title: "Erro",
@@ -111,6 +113,7 @@ export default function StudentsPage() {
         variant: "destructive"
       });
       setDeletingStudent(null);
+      refreshStudents();
     } catch (error) {
       toast({
         title: "Erro",
@@ -162,7 +165,13 @@ export default function StudentsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {students.map((student) => (
+                {loadingStudents ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-24 text-center">
+                       <Skeleton className="h-6 w-3/4 mx-auto" />
+                    </TableCell>
+                  </TableRow>
+                ) : students.map((student) => (
                   <TableRow key={student.id}>
                     <TableCell className="font-medium">{student.name}</TableCell>
                     <TableCell>
@@ -203,6 +212,13 @@ export default function StudentsPage() {
                     </TableCell>
                   </TableRow>
                 ))}
+                 {!loadingStudents && students.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-24 text-center">
+                      Nenhum aluno cadastrado.
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </CardContent>

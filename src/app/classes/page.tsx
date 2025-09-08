@@ -23,10 +23,12 @@ import {
 import { db } from "@/lib/firebase";
 import { collection, addDoc, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestoreQuery } from "@/hooks/use-firestore-query";
+import { useFirestoreCollection } from "@/hooks/use-firestore-query";
+import { Skeleton } from "@/components/ui/skeleton";
+
 
 export default function ClassesPage() {
-  const classes = useFirestoreQuery<Class>("classes");
+  const { data: classes, loading, refresh: refreshClasses } = useFirestoreCollection<Class>("classes");
   const [open, setOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<Class | undefined>(undefined);
   const [deletingClass, setDeletingClass] = useState<Class | null>(null);
@@ -52,6 +54,7 @@ export default function ClassesPage() {
       }
       setEditingClass(undefined);
       setOpen(false);
+      refreshClasses(); // Refresh data after saving
     } catch (error) {
       console.error("Error saving class: ", error);
       toast({
@@ -72,6 +75,7 @@ export default function ClassesPage() {
         variant: "destructive"
       });
       setDeletingClass(null);
+      refreshClasses(); // Refresh data after deleting
     } catch (error) {
       toast({
         title: "Erro",
@@ -120,7 +124,13 @@ export default function ClassesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {classes.map((c) => (
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={2} className="h-24 text-center">
+                      <Skeleton className="h-6 w-1/2 mx-auto" />
+                    </TableCell>
+                  </TableRow>
+                ) : classes.map((c) => (
                   <TableRow key={c.id}>
                     <TableCell className="font-medium">{c.name}</TableCell>
                     <TableCell>
@@ -146,6 +156,13 @@ export default function ClassesPage() {
                     </TableCell>
                   </TableRow>
                 ))}
+                {!loading && classes.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={2} className="h-24 text-center">
+                      Nenhuma turma cadastrada.
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </CardContent>

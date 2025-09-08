@@ -39,10 +39,11 @@ import {
 import { db } from "@/lib/firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestoreQuery } from "@/hooks/use-firestore-query";
+import { useFirestoreCollection } from "@/hooks/use-firestore-query";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function UsersPage() {
-  const users = useFirestoreQuery<AppUser>("users");
+  const { data: users, loading, refresh: refreshUsers } = useFirestoreCollection<AppUser>("users");
   
   const [open, setOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<AppUser | undefined>(undefined);
@@ -58,6 +59,7 @@ export default function UsersPage() {
       });
       setEditingUser(undefined);
       setOpen(false);
+      refreshUsers();
     } catch (error) {
        toast({
         title: "Erro",
@@ -75,9 +77,9 @@ export default function UsersPage() {
   const getRoleBadge = (role: string) => {
     switch (role) {
       case 'admin':
-        return <Badge>{role}</Badge>;
+        return <Badge>admin</Badge>;
       case 'editor':
-        return <Badge variant="secondary">{role}</Badge>;
+        return <Badge variant="secondary">editor</Badge>;
       default:
         return <Badge variant="outline">{role}</Badge>;
     }
@@ -106,7 +108,13 @@ export default function UsersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user) => (
+                {loading ? (
+                    <TableRow>
+                        <TableCell colSpan={4} className="h-24 text-center">
+                            <Skeleton className="h-6 w-3/4 mx-auto" />
+                        </TableCell>
+                    </TableRow>
+                ) : users.map((user) => (
                   <TableRow key={user.uid}>
                     <TableCell className="font-medium">{user.displayName || 'N/A'}</TableCell>
                     <TableCell>{user.email}</TableCell>
@@ -130,6 +138,13 @@ export default function UsersPage() {
                     </TableCell>
                   </TableRow>
                 ))}
+                {!loading && users.length === 0 && (
+                    <TableRow>
+                        <TableCell colSpan={4} className="h-24 text-center">
+                            Nenhum usuário encontrado.
+                        </TableCell>
+                    </TableRow>
+                )}
               </TableBody>
             </Table>
           </CardContent>

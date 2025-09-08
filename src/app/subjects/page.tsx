@@ -23,10 +23,11 @@ import {
 import { db } from "@/lib/firebase";
 import { collection, addDoc, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestoreQuery } from "@/hooks/use-firestore-query";
+import { useFirestoreCollection } from "@/hooks/use-firestore-query";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SubjectsPage() {
-  const subjects = useFirestoreQuery<Subject>("subjects");
+  const { data: subjects, loading, refresh: refreshSubjects } = useFirestoreCollection<Subject>("subjects");
   const [open, setOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | undefined>(undefined);
   const [deletingSubject, setDeletingSubject] = useState<Subject | null>(null);
@@ -52,6 +53,7 @@ export default function SubjectsPage() {
       }
       setEditingSubject(undefined);
       setOpen(false);
+      refreshSubjects();
     } catch (error) {
        toast({
         title: "Erro",
@@ -71,6 +73,7 @@ export default function SubjectsPage() {
         variant: "destructive"
       });
       setDeletingSubject(null);
+      refreshSubjects();
     } catch (error) {
       toast({
         title: "Erro",
@@ -120,7 +123,13 @@ export default function SubjectsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {subjects.map((subject) => (
+                {loading ? (
+                    <TableRow>
+                        <TableCell colSpan={3} className="h-24 text-center">
+                            <Skeleton className="h-6 w-3/4 mx-auto" />
+                        </TableCell>
+                    </TableRow>
+                ) : subjects.map((subject) => (
                   <TableRow key={subject.id}>
                     <TableCell className="font-medium">{subject.name}</TableCell>
                     <TableCell className="text-muted-foreground">{subject.description}</TableCell>
@@ -147,6 +156,13 @@ export default function SubjectsPage() {
                     </TableCell>
                   </TableRow>
                 ))}
+                {!loading && subjects.length === 0 && (
+                    <TableRow>
+                        <TableCell colSpan={3} className="h-24 text-center">
+                            Nenhuma disciplina cadastrada.
+                        </TableCell>
+                    </TableRow>
+                )}
               </TableBody>
             </Table>
           </CardContent>

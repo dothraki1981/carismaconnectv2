@@ -21,14 +21,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { db } from "@/lib/firebase";
-import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, query } from "firebase/firestore";
+import { collection, addDoc, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestoreQuery } from "@/hooks/use-firestore-query";
+import { useFirestoreCollection } from "@/hooks/use-firestore-query";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function TeachersPage() {
-  const teachers = useFirestoreQuery<Teacher>("teachers");
-  const subjects = useFirestoreQuery<Subject>("subjects");
+  const { data: teachers, loading: loadingTeachers, refresh: refreshTeachers } = useFirestoreCollection<Teacher>("teachers");
+  const { data: subjects, loading: loadingSubjects } = useFirestoreCollection<Subject>("subjects");
 
   const [open, setOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<Teacher | undefined>(undefined);
@@ -63,6 +64,7 @@ export default function TeachersPage() {
       }
       setEditingTeacher(undefined);
       setOpen(false);
+      refreshTeachers();
     } catch (error) {
        toast({
         title: "Erro",
@@ -82,6 +84,7 @@ export default function TeachersPage() {
         variant: "destructive"
       });
       setDeletingTeacher(null);
+      refreshTeachers();
     } catch (error) {
       toast({
         title: "Erro",
@@ -132,12 +135,18 @@ export default function TeachersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {teachers.map((teacher) => (
+              {loadingTeachers ? (
+                <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center">
+                        <Skeleton className="h-6 w-3/4 mx-auto" />
+                    </TableCell>
+                </TableRow>
+              ) : teachers.map((teacher) => (
                 <TableRow key={teacher.id}>
                   <TableCell className="font-medium">{teacher.name}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap">
-                      {getSubjectNames(teacher.subjectIds)}
+                      {loadingSubjects ? <Skeleton className="h-5 w-20" /> : getSubjectNames(teacher.subjectIds)}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -176,6 +185,13 @@ export default function TeachersPage() {
                   </TableCell>
                 </TableRow>
               ))}
+               {!loadingTeachers && teachers.length === 0 && (
+                <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center">
+                        Nenhum professor cadastrado.
+                    </TableCell>
+                </TableRow>
+               )}
             </TableBody>
           </Table>
         </CardContent>
