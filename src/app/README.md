@@ -56,3 +56,19 @@ git commit -m "Descreva suas alterações aqui"
 ```bash
 git push
 ```
+
+---
+
+## Solução de Problemas Comuns
+
+### Erro: `remote origin already exists`
+
+**O que significa:** Você tentou conectar seu projeto a um repositório (`git remote add origin ...`), mas ele já está conectado a outro.
+
+**Como resolver:** Em vez de adicionar um novo, você deve **atualizar** a URL do `origin` existente. Use o comando `set-url`.
+
+```bash
+# Substitua a URL pela do seu NOVO repositório
+git remote set-url origin https://github.com/seu-usuario/seu-novo-repositorio.git
+```
+Depois disso, você pode fazer o `git push` normalmente.
