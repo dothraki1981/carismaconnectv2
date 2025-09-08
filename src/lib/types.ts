@@ -23,3 +23,13 @@ export interface Class {
   teacherId?: string;
   subjectIds?: string[];
 }
+
+export interface Grade {
+  id: string;
+  studentId: string;
+  subjectId: string;
+  grade?: number;
+  recoveryGrade?: number;
+  examGrade?: number;
+  absences: number;
+}

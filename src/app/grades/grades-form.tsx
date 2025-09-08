@@ -24,10 +24,12 @@ import {
 import { mockSubjects, mockStudents } from "@/lib/mock-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import type { Student, Subject } from "@/lib/types";
+import type { Student, Grade } from "@/lib/types";
+import { useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
-  subjectId: z.string({ required_error: "Selecione uma disciplina." }),
+  subjectId: z.string({ required_error: "Selecione uma disciplina." }).min(1, "Selecione uma disciplina."),
   grade: z.coerce.number().min(0).max(10).optional(),
   recoveryGrade: z.coerce.number().min(0).max(10).optional(),
   examGrade: z.coerce.number().min(0).max(10).optional(),
@@ -37,10 +39,13 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 type GradesFormProps = {
-  selectedStudentId: string | null;
+  selectedStudentId: string;
+  onSave: (grade: Grade) => void;
+  studentGrades: Grade[];
 }
 
-export function GradesForm({ selectedStudentId }: GradesFormProps) {
+export function GradesForm({ selectedStudentId, onSave, studentGrades }: GradesFormProps) {
+  const { toast } = useToast();
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -52,21 +57,57 @@ export function GradesForm({ selectedStudentId }: GradesFormProps) {
     },
   });
 
-  const { watch, control, reset } = form;
+  const { watch, control, reset, setValue } = form;
   const grade = watch("grade");
   const recoveryGrade = watch("recoveryGrade");
   const examGrade = watch("examGrade");
   const absences = watch("absences");
+  const subjectId = watch("subjectId");
 
   const showRecovery = grade !== undefined && grade < 7;
   const showExam = showRecovery && recoveryGrade !== undefined && recoveryGrade < 7;
   
   const student = mockStudents.find(s => s.id === selectedStudentId);
 
+  // Effect to load existing grade data when a subject is selected
+  useEffect(() => {
+    if (subjectId) {
+      const existingGrade = studentGrades.find(g => g.subjectId === subjectId);
+      if (existingGrade) {
+        setValue("grade", existingGrade.grade);
+        setValue("recoveryGrade", existingGrade.recoveryGrade);
+        setValue("examGrade", existingGrade.examGrade);
+        setValue("absences", existingGrade.absences);
+      } else {
+        // Reset fields if switching to a subject with no grade data
+        setValue("grade", undefined);
+        setValue("recoveryGrade", undefined);
+        setValue("examGrade", undefined);
+        setValue("absences", 0);
+      }
+    }
+  }, [subjectId, studentGrades, setValue]);
+
+
   function onSubmit(values: FormData) {
-    console.log("Submitting grades for student", selectedStudentId, ":", values);
-    alert(`Notas salvas para ${student?.name} na disciplina selecionada! (Verifique o console)`);
-    reset();
+    if (!student) return;
+    
+    // Find the current grade to get an ID if it exists
+    const existingGrade = studentGrades.find(g => g.subjectId === values.subjectId);
+    
+    const gradeData: Grade = {
+      id: existingGrade?.id || `g${Date.now()}`, // Use existing ID or create a new one
+      studentId: selectedStudentId,
+      ...values,
+    };
+
+    onSave(gradeData);
+
+    toast({
+      title: "Sucesso!",
+      description: `Notas de ${student.name} salvas para a disciplina selecionada.`,
+      className: "bg-green-100 border-green-400 text-green-800",
+    });
   }
 
   const getAbsenceStatus = () => {
@@ -128,7 +169,6 @@ export function GradesForm({ selectedStudentId }: GradesFormProps) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {/* TODO: In a real app, this should list only subjects the student is enrolled in */}
                   {mockSubjects.map((subject) => (
                     <SelectItem key={subject.id} value={subject.id}>
                       {subject.name}
@@ -220,7 +260,7 @@ export function GradesForm({ selectedStudentId }: GradesFormProps) {
         </Card>
 
         <div className="flex justify-end pt-4">
-          <Button type="submit" disabled={!selectedStudentId}>Salvar Notas e Faltas</Button>
+          <Button type="submit" disabled={!subjectId}>Salvar Notas e Faltas</Button>
         </div>
       </form>
     </Form>
