@@ -50,24 +50,11 @@ export default function StudentsPage() {
     return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
   };
 
-  const handleAddStudent = (student: Omit<Student, 'id'> & { id?: string }) => {
-    const cleanedCpf = student.cpf.replace(/\D/g, '');
-
-    const isDuplicate = students.some(s => {
-        const existingCpf = s.cpf.replace(/\D/g, '');
-        // If editing, check against other students. If adding, check against all.
-        return existingCpf === cleanedCpf && s.id !== student.id;
-    });
-
-    if(isDuplicate) {
-        alert("Usuário já cadastrado");
-        return;
-    }
-      
-    if(student.id) { // Editing
-        setStudents(students.map(s => s.id === student.id ? { ...s, ...student, cpf: cleanedCpf } : s));
+  const handleSaveStudent = (studentData: Omit<Student, 'id'> & { id?: string }) => {
+    if (studentData.id) { // Editing
+      setStudents(students.map(s => s.id === studentData.id ? { ...s, ...studentData } as Student : s));
     } else { // Adding
-        setStudents([...students, { ...student, id: (students.length + 1).toString(), cpf: cleanedCpf }]);
+      setStudents([...students, { ...studentData, id: `s${students.length + 1}` } as Student]);
     }
     setEditingStudent(undefined);
   };
@@ -164,9 +151,10 @@ export default function StudentsPage() {
           </DialogDescription>
         </DialogHeader>
         <StudentForm
-          onSubmit={handleAddStudent}
+          onSubmit={handleSaveStudent}
           setOpen={setOpen}
           student={editingStudent}
+          existingStudents={students}
         />
       </DialogContent>
     </Dialog>

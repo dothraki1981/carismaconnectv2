@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -14,6 +15,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import type { Student } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   id: z.string().optional(),
@@ -25,12 +27,14 @@ const formSchema = z.object({
 });
 
 type StudentFormProps = {
-  onSubmit: (student: Student) => void;
+  onSubmit: (student: Omit<Student, 'id'> & { id?: string }) => void;
   setOpen: (open: boolean) => void;
   student?: Student;
+  existingStudents: Student[];
 };
 
-export function StudentForm({ onSubmit, setOpen, student }: StudentFormProps) {
+export function StudentForm({ onSubmit, setOpen, student, existingStudents }: StudentFormProps) {
+  const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: student || {
@@ -41,11 +45,24 @@ export function StudentForm({ onSubmit, setOpen, student }: StudentFormProps) {
   });
 
   function handleFormSubmit(values: z.infer<typeof formSchema>) {
-    const cleanedValues = {
-        ...values,
-        cpf: values.cpf.replace(/[^\d]/g, ""),
-    };
-    onSubmit(cleanedValues as Student);
+    const cleanedCpf = values.cpf.replace(/\D/g, "");
+
+    const isDuplicate = existingStudents.some(s => {
+      const existingCpf = s.cpf.replace(/\D/g, "");
+      // If editing, check against other students. If adding, check against all.
+      return existingCpf === cleanedCpf && s.id !== values.id;
+    });
+
+    if (isDuplicate) {
+      toast({
+        title: "Erro de Validação",
+        description: "Usuário já cadastrado com este CPF.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    onSubmit({ ...values, cpf: cleanedCpf });
     setOpen(false);
   }
 
