@@ -15,8 +15,13 @@ const firebaseConfig = {
   measurementId: ""
 };
 
-// Initialize Firebase for SSR
-const app: FirebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+// Initialize Firebase
+let app: FirebaseApp;
+if (getApps().length === 0) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApp();
+}
 
 const auth: Auth = getAuth(app);
 const db: Firestore = getFirestore(app);
