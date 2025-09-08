@@ -4,12 +4,14 @@ export interface Student {
   name: string;
   cpf: string;
   phone: string;
+  classId: string;
 }
 
 export interface Teacher {
   id: string;
   name: string;
-  phone: string;
+  phone?: string;
+  subjectIds: string[];
 }
 
 export interface Subject {

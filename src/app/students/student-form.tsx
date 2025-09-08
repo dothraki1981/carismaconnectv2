@@ -14,7 +14,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import type { Student } from "@/lib/types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { Student, Class } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
@@ -24,6 +25,7 @@ const formSchema = z.object({
     message: "O CPF deve conter 11 dígitos.",
   }),
   phone: z.string().min(10, "Telefone inválido."),
+  classId: z.string({ required_error: "Selecione uma turma." }),
 });
 
 type StudentFormProps = {
@@ -31,9 +33,10 @@ type StudentFormProps = {
   setOpen: (open: boolean) => void;
   student?: Student;
   existingStudents: Student[];
+  classes: Class[];
 };
 
-export function StudentForm({ onSubmit, setOpen, student, existingStudents }: StudentFormProps) {
+export function StudentForm({ onSubmit, setOpen, student, existingStudents, classes }: StudentFormProps) {
   const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -41,6 +44,7 @@ export function StudentForm({ onSubmit, setOpen, student, existingStudents }: St
       name: "",
       cpf: "",
       phone: "",
+      classId: "",
     },
   });
 
@@ -105,6 +109,30 @@ export function StudentForm({ onSubmit, setOpen, student, existingStudents }: St
               <FormControl>
                 <Input placeholder="5511987654321" {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="classId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Turma</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma turma" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {classes.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}

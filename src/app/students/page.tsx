@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { PlusCircle, MoreHorizontal, FilePen, Trash2, Phone } from "lucide-react";
 import { StudentForm } from "./student-form";
-import type { Student } from "@/lib/types";
+import type { Student, Class } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -53,22 +53,40 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function StudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
+  const [classes, setClasses] = useState<Class[]>([]);
   const [open, setOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | undefined>(undefined);
   const [deletingStudent, setDeletingStudent] = useState<Student | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    const q = query(collection(db, "students"));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+    const qStudents = query(collection(db, "students"));
+    const unsubscribeStudents = onSnapshot(qStudents, (querySnapshot) => {
       const studentsData: Student[] = [];
       querySnapshot.forEach((doc) => {
         studentsData.push({ ...doc.data(), id: doc.id } as Student);
       });
       setStudents(studentsData);
     });
-    return () => unsubscribe();
+    
+    const qClasses = query(collection(db, "classes"));
+    const unsubscribeClasses = onSnapshot(qClasses, (querySnapshot) => {
+        const classesData: Class[] = [];
+        querySnapshot.forEach((doc) => {
+            classesData.push({ ...doc.data(), id: doc.id } as Class);
+        });
+        setClasses(classesData);
+    });
+
+    return () => {
+      unsubscribeStudents();
+      unsubscribeClasses();
+    };
   }, []);
+
+  const getClassName = (classId: string) => {
+    return classes.find(c => c.id === classId)?.name || "Sem turma";
+  }
 
   const formatCpf = (cpf: string) => {
     const cleaned = cpf.replace(/\D/g, '');
@@ -157,6 +175,7 @@ export default function StudentsPage() {
                 <TableRow>
                   <TableHead>Nome</TableHead>
                   <TableHead>CPF</TableHead>
+                  <TableHead>Turma</TableHead>
                   <TableHead>Telefone (WhatsApp)</TableHead>
                   <TableHead>
                     <span className="sr-only">Ações</span>
@@ -170,6 +189,7 @@ export default function StudentsPage() {
                     <TableCell>
                       <Badge variant="outline">{formatCpf(student.cpf)}</Badge>
                     </TableCell>
+                    <TableCell>{getClassName(student.classId)}</TableCell>
                     <TableCell>
                       <a
                         href={`https://wa.me/${student.phone}`}
@@ -220,6 +240,7 @@ export default function StudentsPage() {
             setOpen={setOpen}
             student={editingStudent}
             existingStudents={students}
+            classes={classes}
           />
         </DialogContent>
       </Dialog>

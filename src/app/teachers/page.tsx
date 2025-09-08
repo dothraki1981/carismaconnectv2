@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -7,7 +8,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { PlusCircle, MoreHorizontal, FilePen, Trash2, Phone } from "lucide-react";
 import { TeacherForm } from "./teacher-form";
-import type { Teacher } from "@/lib/types";
+import type { Teacher, Subject } from "@/lib/types";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
@@ -22,25 +23,48 @@ import {
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, query } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 export default function TeachersPage() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [open, setOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<Teacher | undefined>(undefined);
   const [deletingTeacher, setDeletingTeacher] = useState<Teacher | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    const q = query(collection(db, "teachers"));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+    const qTeachers = query(collection(db, "teachers"));
+    const unsubscribeTeachers = onSnapshot(qTeachers, (querySnapshot) => {
       const teachersData: Teacher[] = [];
       querySnapshot.forEach((doc) => {
         teachersData.push({ ...doc.data(), id: doc.id } as Teacher);
       });
       setTeachers(teachersData);
     });
-    return () => unsubscribe();
+
+    const qSubjects = query(collection(db, "subjects"));
+    const unsubscribeSubjects = onSnapshot(qSubjects, (querySnapshot) => {
+      const subjectsData: Subject[] = [];
+      querySnapshot.forEach((doc) => {
+        subjectsData.push({ ...doc.data(), id: doc.id } as Subject);
+      });
+      setSubjects(subjectsData);
+    });
+
+    return () => {
+      unsubscribeTeachers();
+      unsubscribeSubjects();
+    }
   }, []);
+
+  const getSubjectNames = (subjectIds: string[]) => {
+    if (!subjectIds || subjectIds.length === 0) return <Badge variant="outline">N/A</Badge>;
+    return subjectIds.map(id => {
+      const subject = subjects.find(s => s.id === id);
+      return subject ? <Badge key={id} variant="secondary" className="mr-1 mb-1">{subject.name}</Badge> : null;
+    });
+  }
 
   const handleSaveTeacher = async (teacherData: Omit<Teacher, 'id'> & { id?: string }) => {
     try {
@@ -122,6 +146,7 @@ export default function TeachersPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
+                <TableHead>Disciplinas</TableHead>
                 <TableHead>Telefone</TableHead>
                 <TableHead>
                   <span className="sr-only">Ações</span>
@@ -133,13 +158,22 @@ export default function TeachersPage() {
                 <TableRow key={teacher.id}>
                   <TableCell className="font-medium">{teacher.name}</TableCell>
                   <TableCell>
-                    <a
-                      href={`tel:${teacher.phone}`}
-                      className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-                    >
-                      <Phone className="h-4 w-4" />
-                      {teacher.phone}
-                    </a>
+                    <div className="flex flex-wrap">
+                      {getSubjectNames(teacher.subjectIds)}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {teacher.phone ? (
+                      <a
+                        href={`tel:${teacher.phone}`}
+                        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+                      >
+                        <Phone className="h-4 w-4" />
+                        {teacher.phone}
+                      </a>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">N/A</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -179,6 +213,7 @@ export default function TeachersPage() {
           onSubmit={handleSaveTeacher}
           setOpen={setOpen}
           teacher={editingTeacher}
+          subjects={subjects}
         />
       </DialogContent>
     </Dialog>

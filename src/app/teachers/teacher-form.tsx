@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -13,34 +14,50 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import type { Teacher } from "@/lib/types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { Teacher, Subject } from "@/lib/types";
 
 const formSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(2, "O nome deve ter pelo menos 2 caracteres."),
-  phone: z.string().min(10, "Telefone inválido."),
+  phone: z.string().optional(),
+  subjectIds: z.array(z.string()).min(1, "Selecione pelo menos uma disciplina."),
 });
 
 type TeacherFormProps = {
   onSubmit: (teacher: Omit<Teacher, 'id'> & { id?: string }) => Promise<void>;
   setOpen: (open: boolean) => void;
   teacher?: Teacher;
+  subjects: Subject[];
 };
 
-export function TeacherForm({ onSubmit, setOpen, teacher }: TeacherFormProps) {
+export function TeacherForm({ onSubmit, setOpen, teacher, subjects }: TeacherFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: teacher || {
-      name: "",
-      phone: "",
+    defaultValues: {
+      id: teacher?.id,
+      name: teacher?.name || "",
+      phone: teacher?.phone || "",
+      subjectIds: teacher?.subjectIds || [],
     },
   });
 
-  const { formState: { isSubmitting } } = form;
+  const { formState: { isSubmitting }, control, setValue } = form;
 
   async function handleFormSubmit(values: z.infer<typeof formSchema>) {
     await onSubmit(values);
   }
+
+  // This is a workaround to handle multi-select with shadcn's Select component
+  const handleSubjectChange = (subjectId: string) => {
+    const currentSubjectIds = control._getWatch("subjectIds") || [];
+    const newSubjectIds = currentSubjectIds.includes(subjectId)
+      ? currentSubjectIds.filter((id) => id !== subjectId)
+      : [...currentSubjectIds, subjectId];
+    setValue("subjectIds", newSubjectIds, { shouldValidate: true });
+  };
+  
+  const selectedSubjects = subjects.filter(s => form.watch("subjectIds")?.includes(s.id));
 
   return (
     <Form {...form}>
@@ -63,10 +80,42 @@ export function TeacherForm({ onSubmit, setOpen, teacher }: TeacherFormProps) {
           name="phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Telefone</FormLabel>
+              <FormLabel>Telefone (Opcional)</FormLabel>
               <FormControl>
                 <Input placeholder="5511987654321" {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+         <FormField
+          control={control}
+          name="subjectIds"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Disciplinas</FormLabel>
+                <Select onValueChange={handleSubjectChange}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione as disciplinas" asChild>
+                         <div className="flex flex-wrap gap-1">
+                          {selectedSubjects.length > 0 ? selectedSubjects.map(s => (
+                            <span key={s.id} className="bg-muted text-muted-foreground text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">
+                              {s.name}
+                            </span>
+                          )) : "Selecione..."}
+                        </div>
+                      </SelectValue>
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {subjects.map((subject) => (
+                      <SelectItem key={subject.id} value={subject.id}>
+                         {subject.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               <FormMessage />
             </FormItem>
           )}
