@@ -1,30 +1,94 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { PlusCircle, MoreHorizontal, FilePen, Trash2, Phone } from "lucide-react";
 import { TeacherForm } from "./teacher-form";
-import { mockTeachers } from "@/lib/mock-data";
 import type { Teacher } from "@/lib/types";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { db } from "@/lib/firebase";
+import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, query } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 export default function TeachersPage() {
-  const [teachers, setTeachers] = useState<Teacher[]>(mockTeachers);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [open, setOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<Teacher | undefined>(undefined);
+  const [deletingTeacher, setDeletingTeacher] = useState<Teacher | null>(null);
+  const { toast } = useToast();
 
-  const handleFormSubmit = (teacher: Teacher) => {
-    if(editingTeacher) {
-      setTeachers(teachers.map(t => t.id === teacher.id ? teacher : t));
-    } else {
-      setTeachers([...teachers, { ...teacher, id: `t${teachers.length + 1}` }]);
+  useEffect(() => {
+    const q = query(collection(db, "teachers"));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const teachersData: Teacher[] = [];
+      querySnapshot.forEach((doc) => {
+        teachersData.push({ ...doc.data(), id: doc.id } as Teacher);
+      });
+      setTeachers(teachersData);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleSaveTeacher = async (teacherData: Omit<Teacher, 'id'> & { id?: string }) => {
+    try {
+      if (teacherData.id) { // Editing
+        const teacherDocRef = doc(db, "teachers", teacherData.id);
+        const { id, ...dataToUpdate } = teacherData;
+        await updateDoc(teacherDocRef, dataToUpdate);
+        toast({
+          title: "Sucesso!",
+          description: "Professor atualizado com sucesso.",
+        });
+      } else { // Adding
+        await addDoc(collection(db, "teachers"), teacherData);
+        toast({
+          title: "Sucesso!",
+          description: "Professor cadastrado com sucesso.",
+        });
+      }
+      setEditingTeacher(undefined);
+      setOpen(false);
+    } catch (error) {
+       toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao salvar o professor.",
+        variant: "destructive",
+      });
     }
-    setEditingTeacher(undefined);
   };
-  
+
+  const handleDeleteTeacher = async () => {
+    if (!deletingTeacher) return;
+    try {
+      await deleteDoc(doc(db, "teachers", deletingTeacher.id));
+      toast({
+        title: "Sucesso!",
+        description: `Professor ${deletingTeacher.name} deletado com sucesso.`,
+        variant: "destructive"
+      });
+      setDeletingTeacher(null);
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao deletar o professor.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const openEditDialog = (teacher: Teacher) => {
     setEditingTeacher(teacher);
     setOpen(true);
@@ -36,6 +100,7 @@ export default function TeachersPage() {
   }
 
   return (
+    <>
     <Dialog open={open} onOpenChange={setOpen}>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -90,7 +155,7 @@ export default function TeachersPage() {
                           <FilePen className="mr-2 h-4 w-4" />
                           Editar
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive focus:text-destructive">
+                        <DropdownMenuItem onClick={() => setDeletingTeacher(teacher)} className="text-destructive focus:text-destructive">
                           <Trash2 className="mr-2 h-4 w-4" />
                           Deletar
                         </DropdownMenuItem>
@@ -111,11 +176,27 @@ export default function TeachersPage() {
           </DialogDescription>
         </DialogHeader>
         <TeacherForm
-          onSubmit={handleFormSubmit}
+          onSubmit={handleSaveTeacher}
           setOpen={setOpen}
           teacher={editingTeacher}
         />
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={!!deletingTeacher} onOpenChange={(open) => !open && setDeletingTeacher(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Essa ação não pode ser desfeita. Isso irá deletar permanentemente o professor <strong>{deletingTeacher?.name}</strong> do banco de dados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeletingTeacher(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteTeacher} className={buttonVariants({ variant: "destructive" })}>Deletar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

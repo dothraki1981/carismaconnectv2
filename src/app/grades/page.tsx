@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -18,14 +18,39 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { mockStudents, mockGrades, mockSubjects } from "@/lib/mock-data";
-import type { Grade } from "@/lib/types";
+import { mockGrades } from "@/lib/mock-data";
+import type { Grade, Student, Subject } from "@/lib/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { db } from "@/lib/firebase";
+import { collection, onSnapshot, query } from "firebase/firestore";
 
 export default function GradesPage() {
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
-  const [grades, setGrades] = useState<Grade[]>(mockGrades);
+  const [grades, setGrades] = useState<Grade[]>(mockGrades); // TODO: Migrate to Firestore
+  
+  const [students, setStudents] = useState<Student[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+
+  useEffect(() => {
+    const qStudents = query(collection(db, "students"));
+    const unsubscribeStudents = onSnapshot(qStudents, (snapshot) => {
+      setStudents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student)));
+    });
+
+    const qSubjects = query(collection(db, "subjects"));
+    const unsubscribeSubjects = onSnapshot(qSubjects, (snapshot) => {
+      setSubjects(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Subject)));
+    });
+
+    // TODO: Load grades from Firestore
+
+    return () => {
+      unsubscribeStudents();
+      unsubscribeSubjects();
+    };
+  }, []);
+
 
   const handleSaveGrade = (gradeData: Grade) => {
     const existingGradeIndex = grades.findIndex(
@@ -40,6 +65,7 @@ export default function GradesPage() {
       updatedGrades = [...grades, gradeData];
     }
     setGrades(updatedGrades);
+     // TODO: Save grades to Firestore
   };
 
   const getGradesForStudent = (studentId: string | null) => {
@@ -48,11 +74,11 @@ export default function GradesPage() {
   }
 
   const getStudentName = (studentId: string) => {
-    return mockStudents.find(s => s.id === studentId)?.name || 'N/A';
+    return students.find(s => s.id === studentId)?.name || 'N/A';
   }
 
   const getSubjectName = (subjectId: string) => {
-    return mockSubjects.find(s => s.id === subjectId)?.name || 'N/A';
+    return subjects.find(s => s.id === subjectId)?.name || 'N/A';
   }
 
   const calculateFinalGrade = (grade: Grade) => {
@@ -109,7 +135,7 @@ export default function GradesPage() {
                 <SelectValue placeholder="Selecione um aluno" />
               </SelectTrigger>
               <SelectContent>
-                {mockStudents.map((student) => (
+                {students.map((student) => (
                   <SelectItem key={student.id} value={student.id}>
                     {student.name}
                   </SelectItem>
@@ -125,6 +151,7 @@ export default function GradesPage() {
                   selectedStudentId={selectedStudentId} 
                   onSave={handleSaveGrade}
                   studentGrades={getGradesForStudent(selectedStudentId)}
+                  subjects={subjects}
                 />
              ) : (
                 <div className="text-center text-muted-foreground py-8">

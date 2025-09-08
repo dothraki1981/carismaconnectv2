@@ -23,7 +23,7 @@ const formSchema = z.object({
 });
 
 type SubjectFormProps = {
-  onSubmit: (subject: Subject) => void;
+  onSubmit: (subject: Omit<Subject, 'id'> & { id?: string }) => Promise<void>;
   setOpen: (open: boolean) => void;
   subject?: Subject;
 };
@@ -37,9 +37,10 @@ export function SubjectForm({ onSubmit, setOpen, subject }: SubjectFormProps) {
     },
   });
 
-  function handleFormSubmit(values: z.infer<typeof formSchema>) {
-    onSubmit(values as Subject);
-    setOpen(false);
+  const { formState: { isSubmitting } } = form;
+
+  async function handleFormSubmit(values: z.infer<typeof formSchema>) {
+    await onSubmit(values);
   }
 
   return (
@@ -76,10 +77,12 @@ export function SubjectForm({ onSubmit, setOpen, subject }: SubjectFormProps) {
           )}
         />
         <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+          <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isSubmitting}>
             Cancelar
           </Button>
-          <Button type="submit">Salvar</Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Salvando...' : 'Salvar'}
+          </Button>
         </div>
       </form>
     </Form>

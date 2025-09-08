@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -28,32 +28,56 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Printer, FileText } from "lucide-react";
-import { mockStudents, mockGrades, mockSubjects } from "@/lib/mock-data";
+import { mockGrades } from "@/lib/mock-data";
 import type { Grade, Student, Subject } from "@/lib/types";
+import { db } from "@/lib/firebase";
+import { collection, onSnapshot, query } from "firebase/firestore";
 
 export default function ReportsPage() {
-  const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(
-    null
-  );
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
+  
+  const [students, setStudents] = useState<Student[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [grades, setGrades] = useState<Grade[]>(mockGrades); // TODO: Migrate to Firestore
+
+  useEffect(() => {
+    const qStudents = query(collection(db, "students"));
+    const unsubscribeStudents = onSnapshot(qStudents, (snapshot) => {
+      setStudents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student)));
+    });
+
+    const qSubjects = query(collection(db, "subjects"));
+    const unsubscribeSubjects = onSnapshot(qSubjects, (snapshot) => {
+      setSubjects(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Subject)));
+    });
+    
+    // TODO: Load grades from Firestore
+
+    return () => {
+      unsubscribeStudents();
+      unsubscribeSubjects();
+    };
+  }, []);
+
 
   const selectedSubject = useMemo(() => {
-    return mockSubjects.find((s) => s.id === selectedSubjectId) || null;
-  }, [selectedSubjectId]);
+    return subjects.find((s) => s.id === selectedSubjectId) || null;
+  }, [selectedSubjectId, subjects]);
 
   const reportData = useMemo(() => {
     if (!selectedSubjectId) return [];
 
-    const gradesForSubject = mockGrades.filter(
+    const gradesForSubject = grades.filter(
       (g) => g.subjectId === selectedSubjectId
     );
     return gradesForSubject.map((grade) => {
-      const student = mockStudents.find((s) => s.id === grade.studentId);
+      const student = students.find((s) => s.id === grade.studentId);
       return {
         student,
         grade,
       };
     });
-  }, [selectedSubjectId]);
+  }, [selectedSubjectId, grades, students]);
 
   const calculateFinalGrade = (grade: Grade) => {
     if (grade.examGrade !== undefined && grade.examGrade !== null)
@@ -113,7 +137,7 @@ export default function ReportsPage() {
                 <SelectValue placeholder="Selecione uma disciplina" />
               </SelectTrigger>
               <SelectContent>
-                {mockSubjects.map((subject) => (
+                {subjects.map((subject) => (
                   <SelectItem key={subject.id} value={subject.id}>
                     {subject.name}
                   </SelectItem>

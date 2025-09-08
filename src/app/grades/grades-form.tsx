@@ -21,10 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { mockSubjects, mockStudents } from "@/lib/mock-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import type { Student, Grade } from "@/lib/types";
+import type { Student, Grade, Subject } from "@/lib/types";
 import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -42,9 +41,11 @@ type GradesFormProps = {
   selectedStudentId: string;
   onSave: (grade: Grade) => void;
   studentGrades: Grade[];
+  subjects: Subject[];
+  student?: Student;
 }
 
-export function GradesForm({ selectedStudentId, onSave, studentGrades }: GradesFormProps) {
+export function GradesForm({ selectedStudentId, onSave, studentGrades, subjects, student }: GradesFormProps) {
   const { toast } = useToast();
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -57,7 +58,7 @@ export function GradesForm({ selectedStudentId, onSave, studentGrades }: GradesF
     },
   });
 
-  const { watch, control, reset, setValue } = form;
+  const { watch, control, setValue } = form;
   const grade = watch("grade");
   const recoveryGrade = watch("recoveryGrade");
   const examGrade = watch("examGrade");
@@ -67,8 +68,6 @@ export function GradesForm({ selectedStudentId, onSave, studentGrades }: GradesF
   const showRecovery = grade !== undefined && grade < 7;
   const showExam = showRecovery && recoveryGrade !== undefined && recoveryGrade < 7;
   
-  const student = mockStudents.find(s => s.id === selectedStudentId);
-
   // Effect to load existing grade data when a subject is selected
   useEffect(() => {
     if (subjectId) {
@@ -169,7 +168,7 @@ export function GradesForm({ selectedStudentId, onSave, studentGrades }: GradesF
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {mockSubjects.map((subject) => (
+                  {subjects.map((subject) => (
                     <SelectItem key={subject.id} value={subject.id}>
                       {subject.name}
                     </SelectItem>

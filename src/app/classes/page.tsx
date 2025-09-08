@@ -1,30 +1,119 @@
-
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { PlusCircle, MoreHorizontal, FilePen, Trash2 } from "lucide-react";
 import { ClassForm } from "./class-form";
-import { mockClasses, mockTeachers, mockSubjects } from "@/lib/mock-data";
-import type { Class } from "@/lib/types";
+import type { Class, Teacher, Subject } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { db } from "@/lib/firebase";
+import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, query } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ClassesPage() {
-  const [classes, setClasses] = useState<Class[]>(mockClasses);
+  const [classes, setClasses] = useState<Class[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+
   const [open, setOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<Class | undefined>(undefined);
+  const [deletingClass, setDeletingClass] = useState<Class | null>(null);
+  const { toast } = useToast();
 
-  const handleFormSubmit = (classData: Partial<Class>) => {
-    if (editingClass) {
-       setClasses(classes.map(c => c.id === editingClass.id ? { ...c, name: classData.name! } : c));
-    } else {
-      setClasses([...classes, { ...classData, id: `c${classes.length + 1}` } as Class]);
+  useEffect(() => {
+    const qClasses = query(collection(db, "classes"));
+    const unsubscribeClasses = onSnapshot(qClasses, (querySnapshot) => {
+      const classesData: Class[] = [];
+      querySnapshot.forEach((doc) => {
+        classesData.push({ ...doc.data(), id: doc.id } as Class);
+      });
+      setClasses(classesData);
+    });
+
+    const qTeachers = query(collection(db, "teachers"));
+    const unsubscribeTeachers = onSnapshot(qTeachers, (querySnapshot) => {
+      const teachersData: Teacher[] = [];
+      querySnapshot.forEach((doc) => {
+        teachersData.push({ ...doc.data(), id: doc.id } as Teacher);
+      });
+      setTeachers(teachersData);
+    });
+
+    const qSubjects = query(collection(db, "subjects"));
+    const unsubscribeSubjects = onSnapshot(qSubjects, (querySnapshot) => {
+      const subjectsData: Subject[] = [];
+      querySnapshot.forEach((doc) => {
+        subjectsData.push({ ...doc.data(), id: doc.id } as Subject);
+      });
+      setSubjects(subjectsData);
+    });
+
+    return () => {
+      unsubscribeClasses();
+      unsubscribeTeachers();
+      unsubscribeSubjects();
+    };
+  }, []);
+
+  const handleSaveClass = async (classData: Omit<Class, 'id'> & { id?: string }) => {
+    try {
+      if (classData.id) { // Editing
+        const classDocRef = doc(db, "classes", classData.id);
+        const { id, ...dataToUpdate } = classData;
+        await updateDoc(classDocRef, dataToUpdate);
+        toast({
+          title: "Sucesso!",
+          description: "Turma atualizada com sucesso.",
+        });
+      } else { // Adding
+        await addDoc(collection(db, "classes"), classData);
+        toast({
+          title: "Sucesso!",
+          description: "Turma cadastrada com sucesso.",
+        });
+      }
+      setEditingClass(undefined);
+      setOpen(false);
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao salvar a turma.",
+        variant: "destructive",
+      });
     }
-    setEditingClass(undefined);
+  };
+
+  const handleDeleteClass = async () => {
+    if (!deletingClass) return;
+    try {
+      await deleteDoc(doc(db, "classes", deletingClass.id));
+      toast({
+        title: "Sucesso!",
+        description: `Turma ${deletingClass.name} deletada com sucesso.`,
+        variant: "destructive"
+      });
+      setDeletingClass(null);
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao deletar a turma.",
+        variant: "destructive",
+      });
+    }
   };
   
   const openEditDialog = (classData: Class) => {
@@ -39,94 +128,114 @@ export default function ClassesPage() {
 
   const getTeacherName = (teacherId?: string) => {
     if (!teacherId) return <span className="text-muted-foreground">Não definido</span>;
-    return mockTeachers.find(t => t.id === teacherId)?.name || 'N/A';
+    return teachers.find(t => t.id === teacherId)?.name || 'N/A';
   }
+  
   const getSubjectNames = (subjectIds?: string[]) => {
     if (!subjectIds || subjectIds.length === 0) {
       return [<Badge key="no-subject" variant="outline">Nenhuma</Badge>];
     }
-    return subjectIds.map(id => mockSubjects.find(s => s.id === id)?.name).filter(Boolean);
+    return subjectIds.map(id => subjects.find(s => s.id === id)?.name).filter(Boolean);
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Turmas</CardTitle>
-            <CardDescription>
-              Gerencie as turmas e suas associações.
-            </CardDescription>
-          </div>
-          <DialogTrigger asChild>
-            <Button size="sm" className="gap-1" onClick={openNewDialog}>
-              <PlusCircle className="h-4 w-4" />
-              Adicionar Turma
-            </Button>
-          </DialogTrigger>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome da Turma</TableHead>
-                <TableHead>Professor</TableHead>
-                <TableHead>Disciplinas</TableHead>
-                <TableHead>
-                  <span className="sr-only">Ações</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {classes.map((c) => (
-                <TableRow key={c.id}>
-                  <TableCell className="font-medium">{c.name}</TableCell>
-                  <TableCell>{getTeacherName(c.teacherId)}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {getSubjectNames(c.subjectIds).map(name => <Badge key={name} variant="secondary">{name}</Badge>)}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => openEditDialog(c)}>
-                          <FilePen className="mr-2 h-4 w-4" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive focus:text-destructive">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Deletar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Turmas</CardTitle>
+              <CardDescription>
+                Gerencie as turmas e suas associações.
+              </CardDescription>
+            </div>
+            <DialogTrigger asChild>
+              <Button size="sm" className="gap-1" onClick={openNewDialog}>
+                <PlusCircle className="h-4 w-4" />
+                Adicionar Turma
+              </Button>
+            </DialogTrigger>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome da Turma</TableHead>
+                  <TableHead>Professor</TableHead>
+                  <TableHead>Disciplinas</TableHead>
+                  <TableHead>
+                    <span className="sr-only">Ações</span>
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>{editingClass ? "Editar Turma" : "Adicionar Turma"}</DialogTitle>
-          <DialogDescription>
-             {editingClass ? "Atualize as informações da turma." : "Preencha os detalhes para cadastrar uma nova turma."}
-          </DialogDescription>
-        </DialogHeader>
-        <ClassForm
-          onSubmit={handleFormSubmit}
-          setOpen={setOpen}
-          classData={editingClass}
-        />
-      </DialogContent>
-    </Dialog>
+              </TableHeader>
+              <TableBody>
+                {classes.map((c) => (
+                  <TableRow key={c.id}>
+                    <TableCell className="font-medium">{c.name}</TableCell>
+                    <TableCell>{getTeacherName(c.teacherId)}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {getSubjectNames(c.subjectIds).map(name => <Badge key={name} variant="secondary">{name}</Badge>)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button aria-haspopup="true" size="icon" variant="ghost">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Toggle menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => openEditDialog(c)}>
+                            <FilePen className="mr-2 h-4 w-4" />
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setDeletingClass(c)} className="text-destructive focus:text-destructive">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Deletar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{editingClass ? "Editar Turma" : "Adicionar Turma"}</DialogTitle>
+            <DialogDescription>
+              {editingClass ? "Atualize as informações da turma." : "Preencha os detalhes para cadastrar uma nova turma."}
+            </DialogDescription>
+          </DialogHeader>
+          <ClassForm
+            onSubmit={handleSaveClass}
+            setOpen={setOpen}
+            classData={editingClass}
+            teachers={teachers}
+            subjects={subjects}
+          />
+        </DialogContent>
+      </Dialog>
+      
+      <AlertDialog open={!!deletingClass} onOpenChange={(open) => !open && setDeletingClass(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Essa ação não pode ser desfeita. Isso irá deletar permanentemente a turma <strong>{deletingClass?.name}</strong> do banco de dados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeletingClass(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteClass} className={buttonVariants({ variant: "destructive" })}>Deletar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
