@@ -18,33 +18,28 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { mockStudents, mockGrades } from "@/lib/mock-data";
-import type { Student, Grade } from "@/lib/types";
+import { mockStudents, mockGrades, mockSubjects } from "@/lib/mock-data";
+import type { Grade } from "@/lib/types";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 
 export default function GradesPage() {
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [grades, setGrades] = useState<Grade[]>(mockGrades);
 
-  // This function will be passed to the form to update the state
   const handleSaveGrade = (gradeData: Grade) => {
-    // Check if a grade for this student and subject already exists
     const existingGradeIndex = grades.findIndex(
       g => g.studentId === gradeData.studentId && g.subjectId === gradeData.subjectId
     );
 
     let updatedGrades;
     if (existingGradeIndex > -1) {
-      // Update existing grade
       updatedGrades = [...grades];
       updatedGrades[existingGradeIndex] = gradeData;
     } else {
-      // Add new grade
       updatedGrades = [...grades, gradeData];
     }
     setGrades(updatedGrades);
-
-    // In a real app, you would also update your database here.
-    console.log("Updated grades list:", updatedGrades);
   };
 
   const getGradesForStudent = (studentId: string | null) => {
@@ -52,9 +47,54 @@ export default function GradesPage() {
     return grades.filter(g => g.studentId === studentId);
   }
 
+  const getStudentName = (studentId: string) => {
+    return mockStudents.find(s => s.id === studentId)?.name || 'N/A';
+  }
+
+  const getSubjectName = (subjectId: string) => {
+    return mockSubjects.find(s => s.id === subjectId)?.name || 'N/A';
+  }
+
+  const calculateFinalGrade = (grade: Grade) => {
+    if (grade.examGrade !== undefined && grade.examGrade !== null) return grade.examGrade;
+    if (grade.recoveryGrade !== undefined && grade.recoveryGrade !== null) return grade.recoveryGrade;
+    return grade.grade;
+  }
+
+  const getGradeStatus = (grade: Grade) => {
+    const finalGrade = calculateFinalGrade(grade);
+    
+    if (grade.absences > 7) {
+        return <Badge variant="destructive">Reprovado por Falta</Badge>;
+    }
+    
+    if (finalGrade === undefined || finalGrade === null) return <Badge variant="outline">Pendente</Badge>;
+    
+    if (finalGrade >= 7) {
+        return <Badge className="bg-green-600 hover:bg-green-700">Aprovado</Badge>
+    }
+    
+    // Check recovery/exam flow
+    if (grade.grade !== undefined && grade.grade < 7) {
+        if (grade.recoveryGrade !== undefined && grade.recoveryGrade !== null) {
+            if (grade.recoveryGrade < 7) {
+                 if (grade.examGrade !== undefined && grade.examGrade !== null) {
+                    return grade.examGrade >= 7 ? <Badge className="bg-green-600 hover:bg-green-700">Aprovado</Badge> : <Badge variant="destructive">Reprovado</Badge>;
+                 }
+                 return <Badge variant="secondary">Em Exame</Badge>
+            }
+             return <Badge className="bg-green-600 hover:bg-green-700">Aprovado</Badge>
+        }
+        return <Badge variant="secondary">Em Recuperação</Badge>
+    }
+    
+    return <Badge variant="destructive">Reprovado</Badge>;
+  }
+
+
   return (
-    <div className="flex flex-col items-center gap-6">
-      <Card className="w-full max-w-2xl">
+    <div className="flex flex-col gap-6">
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Cadastro de Notas e Faltas</CardTitle>
           <CardDescription>
@@ -65,7 +105,7 @@ export default function GradesPage() {
           <div className="space-y-2">
             <Label htmlFor="student">Aluno</Label>
             <Select onValueChange={setSelectedStudentId} value={selectedStudentId ?? ""}>
-              <SelectTrigger id="student">
+              <SelectTrigger id="student" className="max-w-sm">
                 <SelectValue placeholder="Selecione um aluno" />
               </SelectTrigger>
               <SelectContent>
@@ -81,7 +121,7 @@ export default function GradesPage() {
           <div className="mt-4 border-t pt-6">
              {selectedStudentId ? (
                 <GradesForm 
-                  key={selectedStudentId} // Add key to re-render form on student change
+                  key={selectedStudentId}
                   selectedStudentId={selectedStudentId} 
                   onSave={handleSaveGrade}
                   studentGrades={getGradesForStudent(selectedStudentId)}
@@ -92,6 +132,49 @@ export default function GradesPage() {
                 </div>
              )}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Notas e Faltas Lançadas</CardTitle>
+          <CardDescription>
+            Resumo de todas as notas e faltas registradas no sistema.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Aluno</TableHead>
+                <TableHead>Disciplina</TableHead>
+                <TableHead className="text-center">Nota Final</TableHead>
+                <TableHead className="text-center">Faltas</TableHead>
+                <TableHead className="text-center">Situação</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {grades.length > 0 ? (
+                grades.map((grade) => (
+                  <TableRow key={grade.id}>
+                    <TableCell className="font-medium">{getStudentName(grade.studentId)}</TableCell>
+                    <TableCell>{getSubjectName(grade.subjectId)}</TableCell>
+                    <TableCell className="text-center font-mono">
+                      {calculateFinalGrade(grade)?.toFixed(1) ?? "-"}
+                    </TableCell>
+                    <TableCell className="text-center font-mono">{grade.absences}</TableCell>
+                    <TableCell className="text-center">{getGradeStatus(grade)}</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-24 text-center">
+                    Nenhuma nota lançada.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>
