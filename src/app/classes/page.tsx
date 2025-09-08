@@ -39,12 +39,19 @@ export default function ClassesPage() {
         classesData.push({ ...doc.data(), id: doc.id } as Class);
       });
       setClasses(classesData);
+    }, (error) => {
+      console.error("Error fetching classes: ", error);
+      toast({
+        title: "Erro de Conexão",
+        description: "Não foi possível buscar os dados das turmas. Verifique sua conexão e as configurações do Firebase.",
+        variant: "destructive",
+      });
     });
 
     return () => {
       unsubscribeClasses();
     };
-  }, []);
+  }, [toast]);
 
   const handleSaveClass = async (classData: Omit<Class, 'id'> & { id?: string }) => {
     try {
