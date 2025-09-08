@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from "react";
@@ -59,7 +60,7 @@ export default function StudentsPage() {
     });
 
     if(isDuplicate) {
-        alert("Erro: Já existe um aluno com este CPF.");
+        alert("Usuário já cadastrado");
         return;
     }
       
