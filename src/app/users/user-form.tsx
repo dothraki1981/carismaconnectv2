@@ -24,10 +24,10 @@ import {
 import type { AppUser } from "@/lib/types";
 
 const formSchema = z.object({
-  uid: z.string(),
+  id: z.string(),
   email: z.string().email(),
   displayName: z.string().nullable(),
-  role: z.enum(["admin", "editor"]),
+  role: z.enum(["admin", "editor"]).optional(),
 });
 
 type UserFormProps = {
@@ -45,7 +45,7 @@ export function UserForm({ onSubmit, setOpen, user }: UserFormProps) {
   const { formState: { isSubmitting } } = form;
 
   async function handleFormSubmit(values: z.infer<typeof formSchema>) {
-    await onSubmit(values);
+    await onSubmit(values as AppUser);
   }
 
   return (

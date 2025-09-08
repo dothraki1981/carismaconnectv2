@@ -36,8 +36,8 @@ export interface Grade {
 }
 
 export interface AppUser {
-  uid: string;
+  id: string; // This was uid, now it's the generic id from the collection hook
   email: string | null;
   displayName: string | null;
-  role: 'admin' | 'editor'; // Example roles
+  role?: 'admin' | 'editor'; // Role is optional now
 }

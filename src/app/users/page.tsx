@@ -51,8 +51,8 @@ export default function UsersPage() {
 
   const handleSaveUser = async (userData: AppUser) => {
     try {
-      const userRef = ref(db, `users/${userData.uid}`);
-      // In RTDB, roles might be stored differently, but for now we update just the role
+      // For RTDB, the 'id' is the key of the object, which is the user's UID
+      const userRef = ref(db, `users/${userData.id}`);
       await set(userRef, {
           displayName: userData.displayName,
           email: userData.email,
@@ -79,14 +79,14 @@ export default function UsersPage() {
     setOpen(true);
   }
 
-  const getRoleBadge = (role: string) => {
+  const getRoleBadge = (role?: string) => {
     switch (role) {
       case 'admin':
         return <Badge>admin</Badge>;
       case 'editor':
         return <Badge variant="secondary">editor</Badge>;
       default:
-        return <Badge variant="outline">{role}</Badge>;
+        return <Badge variant="outline">{role || 'N/A'}</Badge>;
     }
   };
 
@@ -120,7 +120,7 @@ export default function UsersPage() {
                         </TableCell>
                     </TableRow>
                 ) : users.map((user) => (
-                  <TableRow key={user.uid}>
+                  <TableRow key={user.id}>
                     <TableCell className="font-medium">{user.displayName || 'N/A'}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{getRoleBadge(user.role)}</TableCell>
