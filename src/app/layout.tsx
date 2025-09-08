@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { getAuth, onAuthStateChanged, signOut, type User } from "firebase/auth";
+import { onAuthStateChanged, signOut, type User } from "firebase/auth";
 import { Toaster } from "@/components/ui/toaster";
 import {
   SidebarProvider,
@@ -19,7 +19,7 @@ import { Separator } from "@/components/ui/separator";
 import { MainNav } from "@/components/main-nav";
 import { Header } from "@/components/header";
 import { AppLogo } from "@/app/app-logo";
-import { db } from '@/lib/firebase'; // Ensure db is initialized
+import { auth } from '@/lib/firebase'; // Correctly import the initialized auth instance
 import { Loader2 } from 'lucide-react';
 import LoginPage from './login/page';
 import "./globals.css";
@@ -38,7 +38,7 @@ export default function RootLayout({
   const router = useRouter();
 
   useEffect(() => {
-    const auth = getAuth();
+    // Use the imported auth instance directly
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUser(user);
@@ -58,7 +58,6 @@ export default function RootLayout({
   }, [pathname, router]);
 
   const handleSignOut = async () => {
-    const auth = getAuth();
     await signOut(auth);
     // The onAuthStateChanged listener will handle the redirect
   };
