@@ -152,6 +152,9 @@ export default function RootLayout({
                     </div>
                   </div>
                 </Button>
+                <div className="text-center text-xs text-sidebar-foreground/50 pt-2">
+                  Versão 2.1
+                </div>
               </SidebarFooter>
             </Sidebar>
           </div>
