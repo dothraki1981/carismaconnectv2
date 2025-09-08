@@ -1,3 +1,4 @@
+
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getFirestore, Firestore } from "firebase/firestore";
@@ -10,7 +11,8 @@ const firebaseConfig = {
   storageBucket: "carisma-connect-jupz2.firebasestorage.app",
   apiKey: "AIzaSyDGbLTosgj5HP2FVxao4s8zy3F1-LY9slo",
   authDomain: "carisma-connect-jupz2.firebaseapp.com",
-  messagingSenderId: "111655261768"
+  messagingSenderId: "111655261768",
+  measurementId: ""
 };
 
 
