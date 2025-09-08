@@ -4,7 +4,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppLogo } from "@/app/app-logo";
+import { auth } from "@/lib/firebase";
 
 const formSchema = z.object({
   email: z.string().email("Por favor, insira um email válido."),
@@ -37,7 +38,6 @@ export default function LoginPage() {
   const { formState: { isSubmitting } } = form;
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const auth = getAuth();
     try {
       await signInWithEmailAndPassword(auth, values.email, values.password);
       toast({

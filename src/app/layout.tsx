@@ -19,7 +19,7 @@ import { Separator } from "@/components/ui/separator";
 import { MainNav } from "@/components/main-nav";
 import { Header } from "@/components/header";
 import { AppLogo } from "@/app/app-logo";
-import { auth } from '@/lib/firebase'; // Correctly import the initialized auth instance
+import { auth } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
 import LoginPage from './login/page';
 import "./globals.css";
@@ -153,7 +153,7 @@ export default function RootLayout({
                   </div>
                 </Button>
                 <div className="text-center text-xs text-sidebar-foreground/50 pt-2">
-                  Versão 2.2
+                  Versão 2.3
                 </div>
               </SidebarFooter>
             </Sidebar>
