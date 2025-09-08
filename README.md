@@ -45,7 +45,8 @@ git init -b main
 git remote add origin https://github.com/seu-usuario/seu-repositorio.git
 ```
 
-**3. Enviar o código pela primeira vez**
+**3. Enviar o código e conectar a branch**
+Este comando envia seu código e também conecta sua branch local `main` com a branch remota `main` no GitHub. Você só precisa usar o `-u` na primeira vez.
 ```bash
 git push -u origin main
 ```
