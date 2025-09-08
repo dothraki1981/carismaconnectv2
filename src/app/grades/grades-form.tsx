@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm, Controller } from "react-hook-form";
@@ -39,13 +40,18 @@ export function GradesForm() {
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      studentId: "",
       absences: 0,
+      grade: undefined,
+      recoveryGrade: undefined,
+      examGrade: undefined,
     },
   });
 
   const { watch } = form;
   const grade = watch("grade");
   const recoveryGrade = watch("recoveryGrade");
+  const examGrade = watch("examGrade");
   const absences = watch("absences");
 
   const showRecovery = grade !== undefined && grade < 7;
@@ -130,7 +136,7 @@ export function GradesForm() {
               <FormItem>
                 <FormLabel>Nota</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.1" placeholder="0.0 - 10.0" {...field} />
+                  <Input type="number" step="0.1" placeholder="0.0 - 10.0" {...field} value={field.value ?? ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -160,7 +166,7 @@ export function GradesForm() {
               <FormItem>
                 <FormLabel className="text-primary">Nota da Recuperação</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.1" placeholder="0.0 - 10.0" {...field} />
+                  <Input type="number" step="0.1" placeholder="0.0 - 10.0" {...field} value={field.value ?? ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -176,7 +182,7 @@ export function GradesForm() {
               <FormItem>
                 <FormLabel className="text-destructive">Nota do Exame</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.1" placeholder="0.0 - 10.0" {...field} />
+                  <Input type="number" step="0.1" placeholder="0.0 - 10.0" {...field} value={field.value ?? ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
