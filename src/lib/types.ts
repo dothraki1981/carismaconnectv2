@@ -29,9 +29,9 @@ export interface Grade {
   id: string;
   studentId: string;
   subjectId: string;
-  grade?: number;
-  recoveryGrade?: number;
-  examGrade?: number;
+  grade?: number | null;
+  recoveryGrade?: number | null;
+  examGrade?: number | null;
   absences: number;
 }
 
